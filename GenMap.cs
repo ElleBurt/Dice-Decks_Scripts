@@ -33,12 +33,18 @@ public class GenMap : MonoBehaviour
     public IconTemplate encounterIcon;
     public IconTemplate dashIcon;
 
+    
+
     //the prefab to add the decal to
     public GameObject decalPrefab;
+
+    //Dictionary that stores the connections between icons
+    private Dictionary<GameObject,List<GameObject>> connectedIcons = new Dictionary<GameObject,List<GameObject>>();
 
     [Header("Dashes")]
     //spacing between them
     public float lineSpacing;
+
 
 
     [Header("Trees")]
@@ -52,6 +58,16 @@ public class GenMap : MonoBehaviour
     void Start(){
         gameController = FindObjectOfType<GameController>();
     }
+
+    public void HighlightPaths(Transform LastIconTransform){
+
+        foreach(Transform dash in LastIconTransform){
+            Material highlightedDash = new Material(dash.gameObject.GetComponent<DecalProjector>().material);
+            highlightedDash.color = Color.red;
+            highlightedDash.SetColor("_EmissiveColor", Color.red * 40000f);
+            dash.gameObject.GetComponent<DecalProjector>().material = highlightedDash;
+        }
+    }   
 
     public void IconGeneration(){
         //get a number of rows from the given bounds
@@ -115,6 +131,7 @@ public class GenMap : MonoBehaviour
                 
                 //sets the relevant base map and alpha
                 newMat.SetTexture("_MaskMap", icoTemp.iconAlpha);
+                newMat.SetTexture("_EmissiveColorMap", icoTemp.iconAlpha);
                 newMat.SetTexture("_BaseColorMap", icoTemp.iconColor);
 
                 //starts coroutine to fade the decals in on top of the map
@@ -210,6 +227,14 @@ public class GenMap : MonoBehaviour
                 if(currentRow == 0 || currentRow == transform.childCount-2){
                     foreach(Transform icon in transform.Find($"Row{currentRow+1}")){
                         RenderLine(decalTransform,icon);
+
+                        if(connectedIcons.ContainsKey(decal)){
+                            connectedIcons[decal].Add(icon.gameObject);
+                        }else{
+                            List<GameObject> tmpList = new List<GameObject>();
+                            tmpList.Add(icon.gameObject);
+                            connectedIcons.Add(decal,tmpList);
+                        }
                     }
                 }else{
                     //if not calculate the ones that need connections
@@ -243,11 +268,20 @@ public class GenMap : MonoBehaviour
 
         //orders by distance and then by existing connections, then takes the first 1 or 2
         var connections = currentIconsConnections.OrderBy(tf => tf.Value).OrderBy(tf => tf.Key.GetComponent<mapDecals>().connections).Take(Random.Range(1,3)).ToList();
+        GameObject decal = Icon.gameObject;
 
         //renders the line and then adds it to the dict
         foreach(var connection in connections){
             RenderLine(Icon,connection.Key);
             connection.Key.GetComponent<mapDecals>().connections++;
+
+            if(connectedIcons.ContainsKey(decal)){
+                connectedIcons[decal].Add(connection.Key.gameObject);
+            }else{
+                List<GameObject> tmpList = new List<GameObject>();
+                tmpList.Add(connection.Key.gameObject);
+                connectedIcons.Add(decal,tmpList);
+            }
         }
 
 
@@ -297,6 +331,7 @@ public class GenMap : MonoBehaviour
                 
                 //sets the materials
                 newMat.SetTexture("_MaskMap", dashIcon.iconAlpha);
+                newMat.SetTexture("_EmissiveColorMap", dashIcon.iconAlpha);
                 newMat.SetTexture("_BaseColorMap", dashIcon.iconColor);
 
                 //fades in

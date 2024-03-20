@@ -182,6 +182,8 @@ public class GameController : MonoBehaviour
 
     //drops the player token at the current icon 
     public IEnumerator DropPlayerToken(){
+        genMap.HighlightPaths(lastIconTransform);
+        
         float tokenOffset = Mathf.Abs(Vector3.Distance(lastIconTransform.position, new Vector3(3,0,0)))/17.5f;
         float tokenYOffset = -4f;
         
