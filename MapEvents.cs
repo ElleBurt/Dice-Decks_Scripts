@@ -13,15 +13,18 @@ public class MapEvents : MonoBehaviour {
     public GameObject ScrollPrefab;
     private GameObject Scroll;
     private GameController gameController;
+    private DiceRoller diceRoller;
     private GameObject currentEevnt;
     private GameObject currentScene;
+    private AtkCardHolder atkCardHolder;
 
     [Header("Encounter Related")]
     public GameObject SelectedEncounter;
     public GameObject SelectedSword;
     public List<EnemyTemplate> enemyTemplates = new List<EnemyTemplate>();
-
+    public bool SelectedMiniDied = false;
     private GenMap genMap;
+    private GameObject activeSword;
 
 
     
@@ -37,6 +40,8 @@ public class MapEvents : MonoBehaviour {
     void Start(){
         gameController = FindObjectOfType<GameController>();
         genMap = FindObjectOfType<GenMap>();
+        diceRoller = FindObjectOfType<DiceRoller>();
+        atkCardHolder = FindObjectOfType<AtkCardHolder>();
     }
 
 
@@ -63,6 +68,7 @@ public class MapEvents : MonoBehaviour {
         GameObject sword = GameObject.Instantiate(SelectedSword, encounter.transform.position + new Vector3(0,encounter.transform.localScale.y + 10f,0),Quaternion.identity * Quaternion.Euler(90,0,0));
         StartCoroutine(SpinSword(sword));
         SelectedEncounter = encounter;
+        activeSword = sword;
     }
 
 
@@ -91,6 +97,7 @@ public class MapEvents : MonoBehaviour {
         GameObject newEnemy = GameObject.Instantiate(template.EnemyPrefab, e_spawnPos, Quaternion.Euler(0,90,0));
 
         GameObject newScene = GameObject.Instantiate(template.ScenePrefab, s_spawnPos, Quaternion.identity);
+        currentScene = newScene;
 
         MiniScript enemyScript = newEnemy.GetComponent<MiniScript>();
 
@@ -100,6 +107,10 @@ public class MapEvents : MonoBehaviour {
 
         StartCoroutine(DropEvent(newEnemy, e_spawnPos, false));
         StartCoroutine(DropEvent(newScene, s_spawnPos, true));
+
+        yield return new WaitForSeconds(2f);
+
+        diceRoller.canRoll = true;
     }
 
 
@@ -141,7 +152,7 @@ public class MapEvents : MonoBehaviour {
         }else{
             while(Vector3.Distance(prefab.transform.position, (spawnPos - new Vector3(0,51f,0))) > 0.1f){
 
-                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos - new Vector3(0,51f,0)), 10f * Time.deltaTime);
+                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos - new Vector3(0,51f,0)), 7f * Time.deltaTime);
 
                 yield return null;
             }
@@ -156,7 +167,18 @@ public class MapEvents : MonoBehaviour {
 
         SelectedEncounter.GetComponent<MiniScript>().UpdateHealth(DmgDealt, true);
         
-        StartCoroutine(AttackPhase());
+        if(!SelectedMiniDied){
+            if(atkCardHolder.lastCard){
+                Debug.Log("We arent always lucky i guess");
+            }
+            StartCoroutine(AttackPhase());
+        }else{
+            yield return new WaitForSeconds(1f);
+            Destroy(SelectedEncounter);
+            SelectedMiniDied = false;
+            Destroy(activeSword);
+            StartCoroutine(EventEnded(true));
+        }   
     }
 
     private IEnumerator AttackPhase(){
@@ -185,10 +207,12 @@ public class MapEvents : MonoBehaviour {
         eMid.ExecuteEvent();
     }
 
-    public IEnumerator EventEnded(){
+    public IEnumerator EventEnded(bool isEncounter){
 
-        StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position, true));
-        StartCoroutine(DropEvent(currentScene, currentEevnt.transform.position, false));
+        if(!isEncounter){
+            StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position, true));
+        }
+        StartCoroutine(DropEvent(currentScene, currentScene.transform.position, false));
 
         yield return new WaitForSeconds(1f);
 

@@ -18,6 +18,6 @@ public class CampFireController : MonoBehaviour, EventMedium
 
     public void ExecuteEvent(){
         gameController.IncreaseMaxHealth(healAmount);
-        StartCoroutine(mapEvents.EventEnded());
+        StartCoroutine(mapEvents.EventEnded(false));
     }
 }

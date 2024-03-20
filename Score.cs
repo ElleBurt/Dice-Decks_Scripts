@@ -459,7 +459,6 @@ public class Score : MonoBehaviour
         diceRoller.canRoll = true;
 
         if(atkCardHolder.lastCard){
-            gameController.RoundConclusion();
             diceRoller.canRoll = false;
         }
         

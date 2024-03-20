@@ -55,6 +55,10 @@ public class MiniScript : MonoBehaviour
         
         //HealthText.text = MaxHealth.ToString() + "/" + NewHealth.ToString();
 
+        if(CurrentHealth <= 0){
+            mapEvents.SelectedMiniDied = true;
+        }
+
         
 
         if(Damaged){
