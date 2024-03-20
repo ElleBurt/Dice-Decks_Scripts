@@ -105,12 +105,20 @@ public class MapEvents : MonoBehaviour {
         enemyScript.MaxHealth = template.MaxHealth; 
         enemyScript.CurrentHealth = template.MaxHealth;
 
-        StartCoroutine(DropEvent(newEnemy, e_spawnPos, false));
-        StartCoroutine(DropEvent(newScene, s_spawnPos, true));
+        StartCoroutine(DropEvent(newEnemy, e_spawnPos, false, false));
+        StartCoroutine(DropEvent(newScene, s_spawnPos, true, true));
 
         yield return new WaitForSeconds(2f);
 
         diceRoller.canRoll = true;
+
+        if(newEnemy.transform.GetChild(0).CompareTag("Encounter")){
+            SelectMiniToAttack(newEnemy.transform.GetChild(0).gameObject);
+        }      
+        else{
+            Debug.Log("newEnemy to attack");
+            SelectMiniToAttack(newEnemy);
+        }
     }
 
 
@@ -131,28 +139,34 @@ public class MapEvents : MonoBehaviour {
         currentEevnt = newEvent;
         currentScene = newScene;
 
-        StartCoroutine(DropEvent(newEvent, e_spawnPos, false));
-        StartCoroutine(DropEvent(newScene, s_spawnPos, true));
+        StartCoroutine(DropEvent(newEvent, e_spawnPos, false, false));
+        StartCoroutine(DropEvent(newScene, s_spawnPos, true, true));
 
         StartCoroutine(ActivateEvent());
     }
 
 
-    public IEnumerator DropEvent(GameObject prefab, Vector3 spawnPos, bool isUp){
+    public IEnumerator DropEvent(GameObject prefab, Vector3 spawnPos, bool isUp, bool isScene){
 
         yield return new WaitForSeconds(1.5f);
+
+        //okay this may look a little confusing but its rather simple
+        float speed = isUp && isScene ? 3f //if its a scene moving up (this is when the event begins)
+                    : isUp ? 4f //if its not a scene but is moving up (this is when the event concludes)
+                    : isScene ? 2f //if its a scene moving down (this is when the event concludes)
+                    : 5f; //if its not a scene moving down (these are encounters and event prefabs, and is at the start of new events)
 
         if(isUp){
             while(Vector3.Distance(prefab.transform.position, (spawnPos + new Vector3(0,51f,0))) > 0.1f){
 
-                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos + new Vector3(0,51f,0)), 10f * Time.deltaTime);
+                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos + new Vector3(0,51f,0)), speed * Time.deltaTime);
 
                 yield return null;
             }
         }else{
             while(Vector3.Distance(prefab.transform.position, (spawnPos - new Vector3(0,51f,0))) > 0.1f){
 
-                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos - new Vector3(0,51f,0)), 7f * Time.deltaTime);
+                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos - new Vector3(0,51f,0)), speed * Time.deltaTime);
 
                 yield return null;
             }
@@ -210,9 +224,9 @@ public class MapEvents : MonoBehaviour {
     public IEnumerator EventEnded(bool isEncounter){
 
         if(!isEncounter){
-            StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position, true));
+            StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position, true, false));
         }
-        StartCoroutine(DropEvent(currentScene, currentScene.transform.position, false));
+        StartCoroutine(DropEvent(currentScene, currentScene.transform.position, false, true));
 
         yield return new WaitForSeconds(1f);
 
@@ -220,6 +234,8 @@ public class MapEvents : MonoBehaviour {
 
         yield return new WaitForSeconds(3f);
         Destroy(Scroll,1f);
+        Destroy(currentScene,1f);
+        Destroy(currentEevnt,1f);
 
         gameController.RoundConclusion();
     }
