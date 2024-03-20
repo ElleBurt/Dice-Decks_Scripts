@@ -65,7 +65,6 @@ public class GameController : MonoBehaviour
         UpdateHealth(MaxHealth,false);
         Scroll = GameObject.Instantiate(ScrollPre, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
-        Scroll.transform.localScale = new Vector3(5000f,5000f,5000f);
         genMap.IconGeneration();
         StartCoroutine(MapViewAnim());
 
@@ -84,7 +83,6 @@ public class GameController : MonoBehaviour
         currentRound++;
         Scroll = GameObject.Instantiate(ScrollPre, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
-        Scroll.transform.localScale = new Vector3(5000f,5000f,5000f);
         genMap.displayIcons(true);
         StartCoroutine(MapViewAnim());
     }
@@ -113,6 +111,11 @@ public class GameController : MonoBehaviour
         }
 
        
+    }
+
+    public void IncreaseMaxHealth(float amount){
+        MaxHealth += amount;
+         UpdateHealth(amount,false);
     }
 
     private IEnumerator AnimHealth(Comparison comp, float CurrentHealthVolume, float NewHealthVolume, bool Damaged){

@@ -22,7 +22,7 @@ public class MiniScript : MonoBehaviour
     void Awake()
     {
         mapEvents = FindObjectOfType<MapEvents>();
-        Health = transform.Find("Glass").Find("Health").gameObject;
+        Health = transform.Find("Vile").Find("Health").gameObject;
     }
 
     // Update is called once per frame

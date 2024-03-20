@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public interface EventMedium{
+    public void ExecuteEvent();
+}
+
 public class MapEvents : MonoBehaviour {
 
     [Header("General")]
@@ -9,11 +13,19 @@ public class MapEvents : MonoBehaviour {
     public GameObject ScrollPrefab;
     private GameObject Scroll;
     private GameController gameController;
+    private GameObject currentEevnt;
+    private GameObject currentScene;
 
     [Header("Encounter Related")]
     public GameObject SelectedEncounter;
     public GameObject SelectedSword;
     public List<EnemyTemplate> enemyTemplates = new List<EnemyTemplate>();
+
+    private GenMap genMap;
+
+
+    
+
 
     //int is the row number, string array contains the minis names that can appear in the row
     private Dictionary<int,string[]> EncounterRowFilters = new Dictionary<int,string[]>(){
@@ -24,6 +36,7 @@ public class MapEvents : MonoBehaviour {
 
     void Start(){
         gameController = FindObjectOfType<GameController>();
+        genMap = FindObjectOfType<GenMap>();
     }
 
 
@@ -104,8 +117,13 @@ public class MapEvents : MonoBehaviour {
 
         GameObject newScene = GameObject.Instantiate(template.scenePrefab, s_spawnPos, Quaternion.identity);
 
+        currentEevnt = newEvent;
+        currentScene = newScene;
+
         StartCoroutine(DropEvent(newEvent, e_spawnPos, false));
         StartCoroutine(DropEvent(newScene, s_spawnPos, true));
+
+        StartCoroutine(ActivateEvent());
     }
 
 
@@ -160,5 +178,25 @@ public class MapEvents : MonoBehaviour {
     }
 
 
+    public IEnumerator ActivateEvent(){
+        yield return new WaitForSeconds(3f);
 
+        EventMedium eMid = currentEevnt.GetComponent<EventMedium>();
+        eMid.ExecuteEvent();
+    }
+
+    public IEnumerator EventEnded(){
+
+        StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position, true));
+        StartCoroutine(DropEvent(currentScene, currentEevnt.transform.position, false));
+
+        yield return new WaitForSeconds(1f);
+
+        Scroll.GetComponent<Animator>().SetBool("IconSelected", true);
+
+        yield return new WaitForSeconds(3f);
+        Destroy(Scroll,1f);
+
+        gameController.RoundConclusion();
+    }
 }
