@@ -28,9 +28,12 @@ public class CardController : MonoBehaviour
     public TMP_Text multiText;
     public TMP_Text sellText;
     private Image img; 
+    private Image effectImage;
 
     private bool isMoving = false;
     private bool atTop = false;
+
+    public bool canPickup = false;
     
 
 
@@ -43,12 +46,17 @@ public class CardController : MonoBehaviour
         multiText = transform.GetChild(0).Find("Multiplier").GetComponent<TMP_Text>();
         sellText = transform.GetChild(0).Find("Sell").GetComponent<TMP_Text>();
         img = transform.GetChild(0).Find("Image").GetComponent<Image>();
+        effectImage = transform.GetChild(0).Find("Effect").GetComponent<Image>();
     }
+
+   
 
     public void SetupCard(){
         nameText.text = cardTemplate.name;
         descriptionText.text = cardTemplate.description;
         img.sprite = cardTemplate.imgOverlay;
+        effectImage.sprite = cardTemplate.effectOverlay;
+        gameObject.GetComponent<MeshRenderer>().material.SetTexture("_EffectTex",cardTemplate.effectAlpha);
     }
 
     //move card up or down on hover or exit also tilt depending on mouse distance from center of card
@@ -60,9 +68,17 @@ public class CardController : MonoBehaviour
     }
     void OnMouseExit(){
         entered = false;
+        if(!canPickup){
+            transform.rotation = baseRot;
+        }else{
+            transform.rotation = Quaternion.Euler(-30,180,0);
+        }
     }
 
     void Update(){
+        if(canPickup && entered && Input.GetMouseButtonDown(0)){
+            transform.parent.parent.GetComponent<CardBoosterController>().cardSelected(gameObject);
+        }
         if(!atTop && !isMoving && entered && Input.GetMouseButtonDown(0)){
             StartCoroutine(Hovered());
             gameObject.GetComponent<AudioSource>().Play();
@@ -84,6 +100,22 @@ public class CardController : MonoBehaviour
             Quaternion newRot = Quaternion.Euler(baseRot.eulerAngles.x + -mouseDif.y , baseRot.eulerAngles.y + -mouseDif.x, baseRot.eulerAngles.z);
             transform.rotation = Quaternion.Slerp(transform.rotation, newRot, 15f * Time.deltaTime); 
         }
+        if(canPickup && entered){
+            baseRot = Quaternion.Euler(-30,180,0);
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.WorldToScreenPoint(transform.position).z));
+
+            Vector3 cardPos = transform.position;
+
+            Vector3 mouseDif = mousePos - cardPos;
+
+            mouseDif *= 1.5f;
+        
+            Quaternion newRot = Quaternion.Euler(baseRot.eulerAngles.x + -mouseDif.y , baseRot.eulerAngles.y + -mouseDif.x, baseRot.eulerAngles.z);
+            transform.rotation = Quaternion.Slerp(transform.rotation, newRot, 15f * Time.deltaTime);
+        }
+        
+            
+        
     }
 
     IEnumerator Hovered(){

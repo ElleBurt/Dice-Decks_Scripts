@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class CardHolder : MonoBehaviour
 {
-    public List<CardTemplate> Templates = new List<CardTemplate>();
+    
 
     public List<GameObject> CardsHeld = new List<GameObject>();
 
@@ -25,11 +25,6 @@ public class CardHolder : MonoBehaviour
         spawnPoint = gameObject.transform.position;
     }
 
-    void Update(){
-        if(Input.GetMouseButtonDown(1)){
-            CardAdded(Templates[Random.Range(0, Templates.Count)]);
-        }
-    }
 
     //called when card added to see if too many or not, also make new card and show it and edit text display of how many in hand
     public void CardAdded(CardTemplate cardTemplate){

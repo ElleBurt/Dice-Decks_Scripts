@@ -11,12 +11,15 @@ public class MapEvents : MonoBehaviour {
     [Header("General")]
     public Transform EventSpawn;
     public GameObject ScrollPrefab;
+    public GameObject CardPack;
+    public Vector3 BoosterSpawnPosition;
     private GameObject Scroll;
     private GameController gameController;
     private DiceRoller diceRoller;
     private GameObject currentEevnt;
     private GameObject currentScene;
     private AtkCardHolder atkCardHolder;
+    
 
     [Header("Encounter Related")]
     public GameObject SelectedEncounter;
@@ -34,7 +37,20 @@ public class MapEvents : MonoBehaviour {
     private Dictionary<int,string[]> EncounterRowFilters = new Dictionary<int,string[]>(){
         {1, new string[] {"Wolf"}},
         {2, new string[] {"Wolf"}},
-        {3, new string[] {"PackOfWolves"}},
+        {3, new string[] {"Wolf"}},
+        {4, new string[] {"Wolf"}},
+        {5, new string[] {"Wolf"}},
+        {6, new string[] {"Wolf"}},
+        {7, new string[] {"Wolf"}},
+        {8, new string[] {"Wolf"}},
+        {9, new string[] {"Wolf"}},
+        {10, new string[] {"Wolf"}},
+        {11, new string[] {"Wolf"}},
+        {12, new string[] {"Wolf"}},
+        {13, new string[] {"Wolf"}},
+        {14, new string[] {"Wolf"}},
+        {15, new string[] {"Wolf"}},
+        {16, new string[] {"Wolf"}},
     };
 
     void Start(){
@@ -52,6 +68,11 @@ public class MapEvents : MonoBehaviour {
         Material newMat = new Material(Scroll.GetComponent<SkinnedMeshRenderer>().material);
         newMat.SetTexture("_BaseColorMap", texture);
         Scroll.GetComponent<SkinnedMeshRenderer>().material = newMat;
+    }
+
+    public void SpawnBooster(){
+        GameObject cardPack = GameObject.Instantiate(CardPack, BoosterSpawnPosition, Quaternion.identity);
+        StartCoroutine(cardPack.GetComponent<CardBoosterController>().OpenSequence());
     }
 
 

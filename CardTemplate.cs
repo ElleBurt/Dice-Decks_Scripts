@@ -15,5 +15,7 @@ public class CardTemplate : ScriptableObject {
     public bool shouldReset;
 
     public Sprite imgOverlay;
+    public Sprite effectOverlay;
+    public Texture2D effectAlpha;
     
 }

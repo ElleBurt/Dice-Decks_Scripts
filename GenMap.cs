@@ -64,7 +64,7 @@ public class GenMap : MonoBehaviour
         foreach(Transform dash in LastIconTransform){
             Material highlightedDash = new Material(dash.gameObject.GetComponent<DecalProjector>().material);
             highlightedDash.color = Color.red;
-            highlightedDash.SetColor("_EmissiveColor", Color.red * 40000f);
+            highlightedDash.SetColor("_EmissiveColor", Color.red * 5000f);
             dash.gameObject.GetComponent<DecalProjector>().material = highlightedDash;
         }
     }   

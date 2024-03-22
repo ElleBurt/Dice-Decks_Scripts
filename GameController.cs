@@ -12,7 +12,7 @@ public class GameController : MonoBehaviour
     public int cameraMoveSpeed;
     public bool cameraAlignedToMap = false;
     public bool cameraAlignedToDice = false;
-    private Camera mainCamera;
+    public Camera mainCamera;
 
     [Header("Map Properties")]
     public float TokenMoveSpeed;
@@ -24,6 +24,10 @@ public class GameController : MonoBehaviour
 
     [Header("Event")]
     public List<MapEventTemplate> Events = new List<MapEventTemplate>();
+
+    [Header("Cards")]
+    public List<CardTemplate> CardTemplates = new List<CardTemplate>();
+    public GameObject cardPrefab;
     
 
     [Header("Health Properties")]
@@ -164,6 +168,10 @@ public class GameController : MonoBehaviour
         switch(iconName){
             case "Encounter":
                 StartCoroutine(mapEvents.SpawnEnemy(currentRound));
+            break;
+
+            case "Card Booster":
+                mapEvents.SpawnBooster();
             break;
 
             default:
