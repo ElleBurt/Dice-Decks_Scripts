@@ -30,28 +30,6 @@ public class MapEvents : MonoBehaviour {
     private GameObject activeSword;
 
 
-    
-
-
-    //int is the row number, string array contains the minis names that can appear in the row
-    private Dictionary<int,string[]> EncounterRowFilters = new Dictionary<int,string[]>(){
-        {1, new string[] {"Wolf"}},
-        {2, new string[] {"Wolf"}},
-        {3, new string[] {"Wolf"}},
-        {4, new string[] {"Wolf"}},
-        {5, new string[] {"Wolf"}},
-        {6, new string[] {"Wolf"}},
-        {7, new string[] {"Wolf"}},
-        {8, new string[] {"Wolf"}},
-        {9, new string[] {"Wolf"}},
-        {10, new string[] {"Wolf"}},
-        {11, new string[] {"Wolf"}},
-        {12, new string[] {"Wolf"}},
-        {13, new string[] {"Wolf"}},
-        {14, new string[] {"Wolf"}},
-        {15, new string[] {"Wolf"}},
-        {16, new string[] {"Wolf"}},
-    };
 
     void Start(){
         gameController = FindObjectOfType<GameController>();
@@ -97,18 +75,17 @@ public class MapEvents : MonoBehaviour {
 
         yield return new WaitForSeconds(1f);
 
-        string[] PossibleEncounters = EncounterRowFilters[CurrentRound];
-        
-        string EncounteredType = PossibleEncounters[Random.Range(0, PossibleEncounters.Length)];
-
         EnemyTemplate template = null;
 
+        List<EnemyTemplate> tempList = new List<EnemyTemplate>();
+
         foreach(EnemyTemplate Enemy in enemyTemplates){
-            
-            if(Enemy.name == EncounteredType){
-                template = Enemy;
+            if(isInRange(CurrentRound,Enemy.encouterRows.x,Enemy.encouterRows.y)){
+                tempList.Add(Enemy);
             }
         }
+
+        template = tempList[Random.Range(0,tempList.Count)];
 
         SpawnMap(ScrollPrefab,template.mapTexture);
 
@@ -140,6 +117,10 @@ public class MapEvents : MonoBehaviour {
             Debug.Log("newEnemy to attack");
             SelectMiniToAttack(newEnemy);
         }
+    }
+
+    private static bool isInRange(int currentRound, float minRange, float maxRange){
+        return currentRound >= minRange && currentRound <= maxRange;
     }
 
 

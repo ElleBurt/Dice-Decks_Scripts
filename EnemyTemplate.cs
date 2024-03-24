@@ -10,6 +10,7 @@ public class EnemyTemplate : ScriptableObject {
     public float MaxHealth;
     public float width;
     public int atkPower;
+    public Vector2 encouterRows;
 
     [Header("Mini Details")]
     public GameObject EnemyPrefab;

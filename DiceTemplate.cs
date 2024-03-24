@@ -11,9 +11,5 @@ public class DiceTemplate : ScriptableObject {
     public bool HasEffect;
     public string EffectType;
     public GameObject dice;
-    public Material material;
-    public float scale;
-    public AudioClip clip;
-    public GameObject particleSystem;
     
 }

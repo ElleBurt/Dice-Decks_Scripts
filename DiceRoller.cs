@@ -35,6 +35,8 @@ public class DiceRoller : MonoBehaviour
    //This is the info for the display dice 
    public List<DiceSlot> DiceSlots = new List<DiceSlot>();
 
+   public AudioClip diceHit;
+
    //Finds score script and also adds all the dice slots to a list 
    void Awake(){
         score = FindObjectOfType<Score>();
@@ -68,24 +70,11 @@ public class DiceRoller : MonoBehaviour
             if(!slot.SlotTaken && !slotFound){
 
                 GameObject Dice = GameObject.Instantiate(baseDice.dice, slot.SlotPos, Quaternion.identity);
-                Dice.transform.localScale *= baseDice.scale;
-                GameObject ps = Instantiate(baseDice.particleSystem, Dice.transform.position, Quaternion.identity);
-                ps.transform.SetParent(Dice.transform);
-                ps.transform.localScale = new Vector3(1,1,1);
 
-                MeshRenderer mr = Dice.GetComponent<MeshRenderer>();
-                MeshFilter mf = Dice.GetComponent<MeshFilter>();
-                MeshCollider mc = Dice.AddComponent<MeshCollider>();
-                mc.convex = true;
-
-                AudioSource audsr = Dice.AddComponent<AudioSource>();
                 Rigidbody rb = Dice.AddComponent<Rigidbody>();
-                DiceRoll script = Dice.AddComponent<DiceRoll>();
 
-                script.diceTemplate = baseDice;
-                mr.material = baseDice.material;
-                audsr.clip = baseDice.clip;
-                //Dice.transform.localScale = baseDice.scale;
+                Dice.GetComponent<DiceRoll>().diceTemplate = baseDice;
+                
                 rb.isKinematic = true;
 
                 Dice.name = "dice-" + slot.slotNum.ToString();

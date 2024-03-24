@@ -92,7 +92,7 @@ public class DiceRoll : MonoBehaviour
     IEnumerator PlayHit(){
 
         audioSource.pitch = Random.Range(0.9f,1.4f);
-        audioSource.PlayOneShot(diceTemplate.clip);
+        audioSource.PlayOneShot(diceRoller.diceHit);
         
         yield return new WaitForSeconds(1f);
         
