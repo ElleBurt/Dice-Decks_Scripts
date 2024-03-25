@@ -12,6 +12,7 @@ public class MapEvents : MonoBehaviour {
     public Transform EventSpawn;
     public GameObject ScrollPrefab;
     public GameObject CardPack;
+    public GameObject DiceBox;
     public Vector3 BoosterSpawnPosition;
     private GameObject Scroll;
     private GameController gameController;
@@ -51,6 +52,11 @@ public class MapEvents : MonoBehaviour {
     public void SpawnBooster(){
         GameObject cardPack = GameObject.Instantiate(CardPack, BoosterSpawnPosition, Quaternion.identity);
         StartCoroutine(cardPack.GetComponent<CardBoosterController>().OpenSequence());
+    }
+
+    public void SpawnDiceBox(){
+        GameObject diceBox = GameObject.Instantiate(DiceBox, BoosterSpawnPosition, Quaternion.identity);
+        StartCoroutine(diceBox.GetComponent<DiceBoxController>().OpenSequence());
     }
 
 

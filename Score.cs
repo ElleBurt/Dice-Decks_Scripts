@@ -98,8 +98,6 @@ public class Score : MonoBehaviour
     //take the value provided, the effect of the dice and the dice itself and update the scores accordingly
     private void UpdateScore(string value, string effect, GameObject die){
 
-        value = value.Contains(".") ? value.Substring(0, value.Length - 4) : value;
-
         //gets particle system
         ResultsFX = die.GetComponentInChildren<ParticleSystem>();
         var trailsFX = ResultsFX.trails;
@@ -137,7 +135,6 @@ public class Score : MonoBehaviour
 
             //checks which face rolled on roulette dice 
             case "Roulette":
-                Debug.Log(value);
                 switch(value){
                     case "RC":
                         value = "Even";
@@ -158,6 +155,9 @@ public class Score : MonoBehaviour
                         UpdateMulti(4);
                     break;
                 }
+            break;
+
+            case "Poker":
             break;
 
             //if effect is Basic then just score normally

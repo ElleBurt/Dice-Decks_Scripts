@@ -22,6 +22,8 @@ public class DiceRoller : MonoBehaviour
 
    Score score;
 
+   public GameObject RollButton;
+
    public List<DiceTemplate> DiceBlueprints = new List<DiceTemplate>();
    public List<GameObject> DiceHeld = new List<GameObject>();
 
@@ -61,7 +63,7 @@ public class DiceRoller : MonoBehaviour
    }
 
    //adds the dice to the dice holder
-   private void AddDice(DiceTemplate baseDice){
+   public void AddDice(DiceTemplate baseDice){
 
         bool slotFound = false;
 
@@ -71,11 +73,9 @@ public class DiceRoller : MonoBehaviour
 
                 GameObject Dice = GameObject.Instantiate(baseDice.dice, slot.SlotPos, Quaternion.identity);
 
-                Rigidbody rb = Dice.AddComponent<Rigidbody>();
-
                 Dice.GetComponent<DiceRoll>().diceTemplate = baseDice;
                 
-                rb.isKinematic = true;
+                Dice.GetComponent<Rigidbody>().isKinematic = true;
 
                 Dice.name = "dice-" + slot.slotNum.ToString();
                 Dice.transform.SetParent(slot.Slot);
@@ -97,24 +97,31 @@ public class DiceRoller : MonoBehaviour
 
     //looks out for mouseDown to spawn in dice
     private bool hovered = false;
-   private void Update(){
+    private void Update(){
 
-        if (Input.GetMouseButtonDown(0) && hovered && score.ScoringDice == false && canRoll){
-            StartCoroutine(RollDice());
-            score.canStartScoring = true;
-            StartCoroutine(ButtonPress());
-        }
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-   }
+            if(Physics.Raycast(ray, out hit)){
+                if(hit.transform.gameObject == RollButton){
+                    hovered = true;
+                    RollButton.transform.GetChild(0).GetComponent<MeshRenderer>().material.SetFloat("_Hover", 1f);
+                }else{
+                    hovered = false;
+                    RollButton.transform.GetChild(0).GetComponent<MeshRenderer>().material.SetFloat("_Hover", 0f);
+                }
+            }
 
-   void OnMouseOver(){
-    hovered = true;
-    transform.GetChild(0).GetComponent<MeshRenderer>().material.SetFloat("_Hover", 1f);
-   }
-   void OnMouseExit(){
-    hovered = false;
-    transform.GetChild(0).GetComponent<MeshRenderer>().material.SetFloat("_Hover", 0f);
-   }
+            if (Input.GetMouseButtonDown(0) && hovered && score.ScoringDice == false && canRoll){
+                StartCoroutine(RollDice());
+                score.canStartScoring = true;
+                StartCoroutine(ButtonPress());
+            }
+            
+    }
+
+
+
 
 
     //rerolls any dice that arent level
@@ -145,9 +152,9 @@ public class DiceRoller : MonoBehaviour
 
    
     IEnumerator ButtonPress(){
-        transform.GetComponent<Animator>().SetBool("Pressed", true);
+        RollButton.GetComponent<Animator>().SetBool("Pressed", true);
         yield return new WaitForSeconds(2f);
-        transform.GetComponent<Animator>().SetBool("Pressed", false);
+        RollButton.GetComponent<Animator>().SetBool("Pressed", false);
     }
 
 

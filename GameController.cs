@@ -28,6 +28,7 @@ public class GameController : MonoBehaviour
     [Header("Cards")]
     public List<CardTemplate> CardTemplates = new List<CardTemplate>();
     public GameObject cardPrefab;
+
     
 
     [Header("Health Properties")]
@@ -172,6 +173,10 @@ public class GameController : MonoBehaviour
 
             case "Card Booster":
                 mapEvents.SpawnBooster();
+            break;
+
+            case "Dice Booster":
+                mapEvents.SpawnDiceBox();
             break;
 
             default:
