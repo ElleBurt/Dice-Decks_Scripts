@@ -17,9 +17,11 @@ public class GenMap : MonoBehaviour
     public Vector2 mapRangeZ;
     public Vector2 mapRows;
     public Vector2 iconsPerRow;
+    public Vector2 connectionsPerIcon;
     public float rowPadding;
     public float iconSpacing;
     public float restrictiveDistance;
+    public float iconSize;
     
 
 
@@ -39,7 +41,7 @@ public class GenMap : MonoBehaviour
     public GameObject decalPrefab;
 
     //Dictionary that stores the connections between icons
-    private Dictionary<GameObject,List<GameObject>> connectedIcons = new Dictionary<GameObject,List<GameObject>>();
+    public Dictionary<GameObject,List<GameObject>> connectedIcons = new Dictionary<GameObject,List<GameObject>>();
 
     [Header("Dashes")]
     //spacing between them
@@ -80,7 +82,7 @@ public class GenMap : MonoBehaviour
         //gets a list of which rows will contain encounters
         List<int> encounters = EncounterRows(numOfRows); 
 
-        //sets the bounds of where the icons can spawn within each row
+        //sets the bounds of where the icons can spawn within each row (z-range)
         Vector2 rowBounds = new Vector2(-(rowDifference/2) + rowPadding , (rowDifference/2) - rowPadding);
 
         //loops through all the rows we want to add
@@ -122,6 +124,8 @@ public class GenMap : MonoBehaviour
 
                 //gets the decal projector
                 DecalProjector Dp = icon.GetComponent<DecalProjector>();
+
+                Dp.size = new Vector3(iconSize, iconSize, 10);
 
                 //creates new material blueprint
                 Material newMat = new Material(Dp.material);
@@ -176,14 +180,14 @@ public class GenMap : MonoBehaviour
     private Vector3 generateIconPosition(int Row, Vector2 rowBounds, int rowDifference, List<Vector3> allIconPositions){
 
         //generates random position within given bounds
-        Vector3 iconPos = new Vector3(Random.Range(mapRangeX.x,mapRangeX.y),0, mapRangeZ.x + (rowDifference * Row+1) + Random.Range(rowBounds.x,rowBounds.y));
+        Vector3 iconPos = new Vector3(Random.Range(mapRangeX.x,mapRangeX.y),0,mapRangeZ.x + (rowDifference * Row+1) + Random.Range(rowBounds.x,rowBounds.y));
 
         //simple bool to toggle if it intersects an existing icon
         bool posExists = false;
 
         //check if intersecting and sets the bool to the relative result
         foreach(Vector3 existingIconPos in allIconPositions){
-            if(Vector3.Distance(iconPos, existingIconPos) < iconSpacing){
+            if(Vector3.Distance(iconPos, existingIconPos) < iconSpacing || Vector3.Distance(iconPos, existingIconPos) > restrictiveDistance){
                 posExists = true;
                 break;
             }
@@ -247,6 +251,28 @@ public class GenMap : MonoBehaviour
 
             
         }
+
+        foreach(GameObject decal in allIcons){
+
+            if(decal.GetComponent<mapDecals>().connections == 0 && !decal.CompareTag("Start")){
+
+                int currentRow = int.Parse(Regex.Replace(decal.transform.parent.name, @"\D",""));
+
+                Transform lastRow = transform.Find($"Row{currentRow-1}");
+                List<(Transform, float)> distances = new List<(Transform, float)>();
+
+                foreach(Transform lastdecal in lastRow){
+                    float dist = Vector3.Distance(lastdecal.position,decal.transform.position);
+                    distances.Add((lastdecal,dist));
+                }
+
+                Transform lastIcon = distances.OrderBy(tf => tf.Item2).Take(1).ToList()[0].Item1;
+
+                RenderLine(lastIcon,decal.transform);
+
+
+            }
+        }
         //now we can access all the icons and lines; we can generate the surrounding environment
         generateEnvironment();
     }
@@ -267,13 +293,12 @@ public class GenMap : MonoBehaviour
         }
 
         //orders by distance and then by existing connections, then takes the first 1 or 2
-        var connections = currentIconsConnections.OrderBy(tf => tf.Value).OrderBy(tf => tf.Key.GetComponent<mapDecals>().connections).Take(Random.Range(1,3)).ToList();
+        var connections = currentIconsConnections.OrderBy(tf => tf.Value).OrderBy(tf => tf.Key.GetComponent<mapDecals>().connections).Take(Mathf.CeilToInt(Random.Range(connectionsPerIcon.x,connectionsPerIcon.y))).ToList();
         GameObject decal = Icon.gameObject;
 
         //renders the line and then adds it to the dict
         foreach(var connection in connections){
             RenderLine(Icon,connection.Key);
-            connection.Key.GetComponent<mapDecals>().connections++;
 
             if(connectedIcons.ContainsKey(decal)){
                 connectedIcons[decal].Add(connection.Key.gameObject);
@@ -289,6 +314,8 @@ public class GenMap : MonoBehaviour
 
     //simply draws a line from current icon to the next icon
     void RenderLine(Transform current, Transform next){
+
+        next.gameObject.GetComponent<mapDecals>().connections++;
 
         //sets the direction in which the icon is
         Vector3 heading = (next.position - current.position).normalized;
@@ -324,7 +351,7 @@ public class GenMap : MonoBehaviour
                 Material newMat = new Material(Dp.material);
 
                 //makes the decals smaller than the icons would be
-                Dp.size = new Vector3(2,2,10);
+                Dp.size = new Vector3(iconSize/2f, iconSize/2f, 10);
 
                 //sets the size on the local script
                 decal.GetComponent<mapDecals>().size = Dp.size;

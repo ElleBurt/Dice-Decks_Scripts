@@ -6,7 +6,12 @@ using UnityEngine.EventSystems;
 
 public class DiceBoxController : MonoBehaviour
 {
-    private Dictionary<int,List<(Rarity, int)>> roundWeights = new Dictionary<int,List<(Rarity, int)>>();
+    private Dictionary<Rarity, int> roundWeights = new Dictionary<Rarity, int>(){
+        {Rarity.Common,20},
+        {Rarity.Uncommon,40},
+        {Rarity.Rare,70},
+        {Rarity.Epic,90}
+    };
     private Dictionary<Rarity,List<DiceTemplate>> diceWeights = new Dictionary<Rarity,List<DiceTemplate>>();
 
     public Transform DecalSpawns;
@@ -24,27 +29,6 @@ public class DiceBoxController : MonoBehaviour
         DecalSpawns = GameObject.FindGameObjectsWithTag("DecalSpawns")[0].transform;
         boxView = GameObject.FindGameObjectsWithTag("DiceBox")[0].transform;
 
-        int round = 1;
-        int common = 70;
-        int Uncommon = 25;
-        int rare = 4;
-        int epic = 1;
-
-        foreach (Transform row in DecalSpawns)
-        {   
-            roundWeights.Add(round, new List<(Rarity, int)>{
-                (Rarity.Common,common),
-                (Rarity.Uncommon,Uncommon),
-                (Rarity.Rare,rare),
-                (Rarity.Epic,epic)
-            });
-            common -= 5;
-            Uncommon -= -1;
-            rare += 4;
-            epic += 2;
-            round++;
-        }
-
         foreach(DiceTemplate template in diceRoller.DiceBlueprints){
             if(diceWeights.ContainsKey(template.itemRarity)){
                 diceWeights[template.itemRarity].Add(template);
@@ -52,6 +36,7 @@ public class DiceBoxController : MonoBehaviour
                 diceWeights.Add(template.itemRarity, new List<DiceTemplate>{template});
             }
         }
+        
     }
 
     private void SpawnDice(){
@@ -61,18 +46,27 @@ public class DiceBoxController : MonoBehaviour
             //gets the relative spawnPos for the dice
             Transform spawn = transform.Find($"DSpawn{i+1}");
 
+            int baseRarityPerc = Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f);
+
             //1-100 
             int rarityPercent = Random.Range(0,101);
 
             //gets the rarity by comparing the rarityPercent to the list of weights for the current round
-            Rarity rarity = roundWeights[gameController.currentRound].FirstOrDefault(rar => rar.Item2 > rarityPercent).Item1;
+            Rarity rarity = Rarity.Common;
+
+            foreach(KeyValuePair<Rarity, int> kvp in roundWeights){
+                if(rarityPercent < kvp.Value){
+                    rarity = kvp.Key;
+                    break;
+                }
+            }
 
             //gets a random dice template from the dict of rarities and templates
             DiceTemplate diceTemp = diceWeights[rarity][Random.Range(0,diceWeights[rarity].Count)];
 
-            GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position - new Vector3(0,0,1) ,Quaternion.identity);
+            GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position ,Quaternion.identity);
             Dice.GetComponent<DiceRoll>().diceTemplate = diceTemp;
-            Dice.transform.localScale /= 1.25f;
+            Dice.transform.localScale /= 4f;
             Dice.GetComponent<Rigidbody>().isKinematic = true;
             Dice.transform.rotation = new Quaternion(0,0,0,0);
             Dice.transform.SetParent(spawn);
@@ -82,14 +76,6 @@ public class DiceBoxController : MonoBehaviour
     }
 
     public void closeBox(Transform child){
-        for(int i = 0; i < 3; i++){
-            if(transform.GetChild(i) == child){
-                Destroy(transform.GetChild(i).GetChild(0).gameObject);
-            }else{
-                transform.GetChild(i).GetChild(0).position -= new Vector3(0,2.5f,0);
-                Destroy(transform.GetChild(i).GetChild(0).gameObject,3);
-            }
-        }
         StartCoroutine(ThrowBox());
     }
 
@@ -116,6 +102,7 @@ public class DiceBoxController : MonoBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         
+        
     }
 
     private IEnumerator liftDice(GameObject dice){
@@ -126,7 +113,9 @@ public class DiceBoxController : MonoBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         foreach(Transform col in transform){
-            col.gameObject.GetComponent<DiceBoxHover>().animFin = true;
+            if(col.CompareTag("DiceBoxSpawn")){
+                col.gameObject.GetComponent<DiceBoxHover>().animFin = true;
+            }
         }
     }
 }

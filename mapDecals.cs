@@ -12,10 +12,12 @@ public class mapDecals : MonoBehaviour
     public int connections;
 
     GameController gameController;
+    GenMap genMap;
     // Start is called before the first frame update
     void Start()
     {
         gameController = FindObjectOfType<GameController>();
+        genMap = FindObjectOfType<GenMap>();
     }
 
 
@@ -23,7 +25,7 @@ public class mapDecals : MonoBehaviour
     void Update()
     {
         if(Input.GetMouseButtonDown(0) && active && gameController.cameraAlignedToMap){
-            if(Regex.Replace(transform.parent.name,@"\D","") == gameController.currentRound.ToString()){
+            if(Regex.Replace(transform.parent.name,@"\D","") == gameController.currentRound.ToString() && genMap.connectedIcons[gameController.lastIconTransform.gameObject].Contains(gameObject)){
                 StartCoroutine(gameController.IconSelected(transform));
             }
         }
