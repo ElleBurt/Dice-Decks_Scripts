@@ -7,7 +7,19 @@ public enum Rarity{
     Uncommon,
     Rare,
     Epic,
+    Legendary,
     CurrentlyImpossible
+}
+
+public enum DiceType{
+    Basic,
+    Multi,
+    Roulette,
+    Poker,
+    Explosive,
+    Elemental,
+    ReRoll,
+    Luck,
 }
 
 [CreateAssetMenu(fileName = "DiceTemplate", menuName = "Dice", order = 0)]
@@ -17,7 +29,9 @@ public class DiceTemplate : ScriptableObject {
     public int hiVal;
     public int loVal;
     public bool HasEffect;
-    public string EffectType;
+    [TextAreaAttribute]
+    public string description;
+    public DiceType diceType;
     public GameObject dice;
     public Rarity itemRarity;
     

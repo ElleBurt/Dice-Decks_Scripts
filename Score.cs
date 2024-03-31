@@ -15,16 +15,13 @@ public class Score : MonoBehaviour
     AtkCardHolder atkCardHolder;
     CardHolder cardHolder;
     GameController gameController;
+    ScoreDice scoreDice;
 
     MapEvents mapEvents;
 
     //audio source
-    AudioSource sfx;
     public AudioClip[] SFXs;
-    float pitch = 0.9f;
-
-    //particle system 
-    private ParticleSystem ResultsFX;
+    public float pitch = 0.9f;
 
     //text for scoring
     public TMP_Text scoreText, multiText;
@@ -40,16 +37,18 @@ public class Score : MonoBehaviour
     public GameObject FaceValueDisplay;
 
     //list of the results this round
-    List<int> diceResults = new List<int>();
+    public List<int> diceResults = new List<int>();
 
     //if the script can start basically
     public bool canStartScoring = false;
 
+    public int score;
+
     //order in which dice are scored based on effects
-    Dictionary<string,int> effectOrder = new Dictionary<string,int>(){
-        {"Basic", 0},
-        {"Multi", 1},
-        {"Roulette", 2},
+    Dictionary<DiceType,int> effectOrder = new Dictionary<DiceType,int>(){
+        {DiceType.Basic, 0},
+        {DiceType.Multi, 1},
+        {DiceType.Roulette, 2},
     };
 
     //gets scripts
@@ -59,6 +58,7 @@ public class Score : MonoBehaviour
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
         gameController = FindObjectOfType<GameController>();
         mapEvents = FindObjectOfType<MapEvents>();
+        scoreDice = FindObjectOfType<ScoreDice>();
     }   
 
   
@@ -84,7 +84,7 @@ public class Score : MonoBehaviour
             
 
             if (allRollsFinished && !ScoringDice){
-                StartCoroutine(ScoreDice());
+                StartCoroutine(ScoreFaces());
                 ScoringDice = true;
                 canStartScoring = false;
                 diceRoller.canRoll = false;
@@ -95,102 +95,15 @@ public class Score : MonoBehaviour
         
     }
 
-    //take the value provided, the effect of the dice and the dice itself and update the scores accordingly
-    private void UpdateScore(string value, string effect, GameObject die){
-
-        //gets particle system
-        ResultsFX = die.GetComponentInChildren<ParticleSystem>();
-        var trailsFX = ResultsFX.trails;
-        var rendererFX = ResultsFX.GetComponent<Renderer>();
-
-        //gets sound source
-        sfx = diceRoller.GetComponentInParent<AudioSource>();
-        
-        //gets script on the dice
-        DiceRoll dice = die.GetComponent<DiceRoll>();
-
-        //used to decide what audio is played
-        int audioIndex = 0;
-
-        //sets score equal to the value displayed by text
-        int score = int.Parse(Regex.Match(scoreText.text, @"\d+").Value);
-
-        //check the effects and applies the respective calculations
-        switch(effect){
-            
-            //if multi, gets the number after the x and adds it to the multi
-            case "Multi":
-
-                if(Regex.Match(value, @"\D").Success){
-                    UpdateMulti(int.Parse(Regex.Match(value, @"\d+").Value));
-                    audioIndex = 1;
-                }else{
-                    diceResults.Add(int.Parse(value));
-                    score += int.Parse(value);
-                    scoreText.text = score.ToString();
-                }
-                
-                
-            break;
-
-            //checks which face rolled on roulette dice 
-            case "Roulette":
-                switch(value){
-                    case "RC":
-                        value = "Even";
-                        //checks if even
-                        if(score % 2 == 0){
-                            UpdateMulti(4);
-                        }
-                    break;
-                    case "BC":
-                        value = "Odd";
-                        //checks if odd
-                        if(score % 2 != 0){
-                            UpdateMulti(4);
-                        }
-                    break;
-                    case "GC":
-                        value = "Any";
-                        UpdateMulti(4);
-                    break;
-                }
-            break;
-
-            case "Poker":
-            break;
-
-            //if effect is Basic then just score normally
-            default:
-                diceResults.Add(int.Parse(value));
-                //sets the scoreText to the new score
-                score += int.Parse(value);
-                scoreText.text = score.ToString();
-
-            break;
-        }
-
-        //show the value in small gui popup
-       // StartCoroutine(DisplayFaceValue(value,die));
-
-        //play audio and particle system
-        sfx.clip = SFXs[audioIndex];
-        sfx.pitch = pitch;
-        sfx.Play();
-        ResultsFX.Play();
-        pitch += 0.1f;
-
-    }
-
     //updates the multi with the give value
-    private void UpdateMulti(int value){
+    public void UpdateMulti(int value){
 
         multiText.text = Regex.IsMatch(multiText.text, @"\d+") ? "x" + (int.Parse(Regex.Match(multiText.text, @"\d+").Value) + value).ToString() : "x" + value.ToString();
 
     }
     
     //gets the active cards text elements and edits them accordingly    
-    IEnumerator ScoreDice(){
+    IEnumerator ScoreFaces(){
         diceResults.Clear();
         pitch = 0.9f;
 
@@ -206,15 +119,14 @@ public class Score : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         //orders the dice by which effect they have
-        List<GameObject> OrderedList = diceRoller.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.EffectType]).ToList();
-        
+        List<GameObject> OrderedList = diceRoller.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
         //goes through list and gets struct values
         foreach(GameObject dice in OrderedList){
             DiceRoll diceScript = dice.GetComponent<DiceRoll>();
             string value = diceScript.faceName;
-            string effect = diceScript.diceTemplate.EffectType;
-
-            UpdateScore(value, effect, dice);
+            DiceType type = diceScript.diceTemplate.diceType;
+            //UpdateScore(value, type, dice);
+            scoreDice.ProcessDice(type,dice,value);
 
             yield return new WaitForSeconds(0.7f);
         } 

@@ -7,10 +7,12 @@ using UnityEngine.EventSystems;
 public class DiceBoxController : MonoBehaviour
 {
     private Dictionary<Rarity, int> roundWeights = new Dictionary<Rarity, int>(){
-        {Rarity.Common,20},
-        {Rarity.Uncommon,40},
-        {Rarity.Rare,70},
-        {Rarity.Epic,90}
+        {Rarity.CurrentlyImpossible,100},
+        {Rarity.Legendary,95},
+        {Rarity.Epic,80},
+        {Rarity.Rare,40},
+        {Rarity.Uncommon,15},
+        {Rarity.Common,0},
     };
     private Dictionary<Rarity,List<DiceTemplate>> diceWeights = new Dictionary<Rarity,List<DiceTemplate>>();
 
@@ -46,16 +48,17 @@ public class DiceBoxController : MonoBehaviour
             //gets the relative spawnPos for the dice
             Transform spawn = transform.Find($"DSpawn{i+1}");
 
-            int baseRarityPerc = Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f);
+            int baseRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f)),1,101);
+            int maxRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2)),1,101);
 
             //1-100 
-            int rarityPercent = Random.Range(0,101);
+            int rarityPercent = Random.Range(baseRarityPerc,maxRarityPerc);
 
             //gets the rarity by comparing the rarityPercent to the list of weights for the current round
             Rarity rarity = Rarity.Common;
 
             foreach(KeyValuePair<Rarity, int> kvp in roundWeights){
-                if(rarityPercent < kvp.Value){
+                if(rarityPercent > kvp.Value){
                     rarity = kvp.Key;
                     break;
                 }
