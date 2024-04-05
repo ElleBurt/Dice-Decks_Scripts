@@ -31,5 +31,6 @@ public class CardTemplate : ScriptableObject {
     public Texture2D effectAlpha;
 
     public CardClass cardClass;
-    
+    public int baseSellValue;
+    public int basePrice;
 }

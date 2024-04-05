@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Text.RegularExpressions;
 
 public class DiceDisplay : MonoBehaviour
 {
@@ -11,6 +14,9 @@ public class DiceDisplay : MonoBehaviour
     private bool MouseOver = false;
 
     public Transform dice;
+    public GameObject ItemDesc;
+
+    private GameObject openDesc;
 
     private bool soundPlayed = false;
 
@@ -27,7 +33,7 @@ public class DiceDisplay : MonoBehaviour
         if(!soundPlayed && dice != null){
             StartCoroutine(PlaySound());
             soundPlayed = true;
-        }
+        }        
     }
 
     void OnMouseExit(){
@@ -51,8 +57,38 @@ public class DiceDisplay : MonoBehaviour
             
             if(!MouseOver){
                 dice.position = basePos;
+                Destroy(openDesc);
             }else{
                 dice.position = basePos+hoverOffset;
+                
+                if(openDesc == null){
+                    GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(-10,9.3f,0)),Quaternion.identity);
+                    GameObject dice = transform.GetChild(0).gameObject;
+                    DiceTemplate dt = dice.GetComponent<DiceRoll>().diceTemplate;
+                    Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";
+                    Desc.transform.Find("RightSide").Find("SideInfo").Find("High").GetComponent<TMP_Text>().text = $"Highest: {dt.hiVal}";
+                    Desc.transform.Find("RightSide").Find("SideInfo").Find("Low").GetComponent<TMP_Text>().text = $"Lowest: {dt.loVal}";
+
+                    Transform SpecFaces = Desc.transform.Find("RightSide").Find("Faces");
+
+                    int index = 0;
+                    foreach(Transform child in dice.transform){
+                        if(Regex.IsMatch(child.name,@"\D") && child.name != "DiceResult"){
+                            GameObject faceTemp = Instantiate(Resources.Load($"UI/Prefabs/FaceTemp") as GameObject);
+                            faceTemp.transform.Find("Face").GetComponent<Image>().sprite = (Resources.Load<Sprite>($"UI/Faces/{child.name}"));
+                            faceTemp.transform.SetParent(SpecFaces);
+                            faceTemp.transform.localScale = Vector3.one;
+                            faceTemp.transform.localRotation = Quaternion.Euler(Vector3.zero);
+                            faceTemp.GetComponent<RectTransform>().anchoredPosition3D = new Vector3(index, index,0);
+                            index++;
+                        }
+                    }
+                    
+
+                    openDesc = Desc;
+                }
+                openDesc.transform.LookAt(Camera.main.transform.position);
+                openDesc.transform.rotation *= Quaternion.Euler(0,180,0);
             }
         }
         

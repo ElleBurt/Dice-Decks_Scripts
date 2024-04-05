@@ -17,6 +17,8 @@ public class MiniScript : MonoBehaviour
     private delegate bool Comparison(float CurrentHealthVolume, float NewHealthVolume);
 
     MapEvents mapEvents;
+    public int TickDamage;
+    public string EffectInflicted;
 
     // Start is called before the first frame update
     void Awake()
@@ -30,6 +32,13 @@ public class MiniScript : MonoBehaviour
     {
         if(hovered && Input.GetMouseButtonDown(0)){
             mapEvents.SelectMiniToAttack(gameObject);
+        }
+    }
+
+    public void TickDamageInflicted(){
+        UpdateHealth(TickDamage,true);
+        if(mapEvents.SelectedMiniDied){
+            StartCoroutine(mapEvents.MiniDamaged(0));
         }
     }
 

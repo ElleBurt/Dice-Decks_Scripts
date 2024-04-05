@@ -116,12 +116,13 @@ public class DiceRoller : MonoBehaviour
                 StartCoroutine(RollDice());
                 score.canStartScoring = true;
                 StartCoroutine(ButtonPress());
+                canRoll = false;
             }
             
     }
 
 
-
+    
 
 
     //rerolls any dice that arent level

@@ -32,12 +32,7 @@ public class Score : MonoBehaviour
     //if scoring dice currently
     public bool ScoringDice = false;
 
-    //shows the dice score in gui above it
-    public Vector3 GuiOffset = new Vector3(0f, 2f, 0f);
-    public GameObject FaceValueDisplay;
-
-    //list of the results this round
-    public List<int> diceResults = new List<int>();
+    
 
     //if the script can start basically
     public bool canStartScoring = false;
@@ -46,10 +41,20 @@ public class Score : MonoBehaviour
 
     //order in which dice are scored based on effects
     Dictionary<DiceType,int> effectOrder = new Dictionary<DiceType,int>(){
-        {DiceType.Basic, 0},
-        {DiceType.Multi, 1},
-        {DiceType.Roulette, 2},
+        {DiceType.Poker, 0},
+        {DiceType.Basic, 1},
+        {DiceType.Multi, 2},
+        {DiceType.Elemental, 3},
+        {DiceType.Roulette, 4},
+        {DiceType.ReRoll, 5},
     };
+
+
+    //list of the results this round
+    public List<int> diceResults = new List<int>();
+    public bool shouldReroll = false;
+    private bool hasRerolled = false;
+
 
     //gets scripts
     private void Awake(){
@@ -97,44 +102,62 @@ public class Score : MonoBehaviour
 
     //updates the multi with the give value
     public void UpdateMulti(int value){
-
+        
+        //basically just checks if the multi already contains a number, if not then we must set it
         multiText.text = Regex.IsMatch(multiText.text, @"\d+") ? "x" + (int.Parse(Regex.Match(multiText.text, @"\d+").Value) + value).ToString() : "x" + value.ToString();
 
     }
+
     
     //gets the active cards text elements and edits them accordingly    
     IEnumerator ScoreFaces(){
         diceResults.Clear();
         pitch = 0.9f;
 
-        atkCardHolder.DrawCard();
+        if(!hasRerolled){
+            atkCardHolder.DrawCard();
+            score=0;
+        }
+        
 
         scoreText = atkCardHolder.ActiveCard.CardBase.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>();
         multiText = atkCardHolder.ActiveCard.CardBase.transform.Find("Canvas").Find("Multi").GetComponent<TMP_Text>();
-
-        
-
-        scoreText.text = "0";
 
         yield return new WaitForSeconds(1f);
 
         //orders the dice by which effect they have
         List<GameObject> OrderedList = diceRoller.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
-        //goes through list and gets struct values
+
+        //goes through list and gets SO values
         foreach(GameObject dice in OrderedList){
             DiceRoll diceScript = dice.GetComponent<DiceRoll>();
             string value = diceScript.faceName;
             DiceType type = diceScript.diceTemplate.diceType;
-            //UpdateScore(value, type, dice);
+
             scoreDice.ProcessDice(type,dice,value);
 
             yield return new WaitForSeconds(0.7f);
         } 
 
-        yield return new WaitForSeconds(0.2f);
+        if(shouldReroll && !hasRerolled){
+            hasRerolled = true;
 
-        //now dice are scored we can score the cards
-        StartCoroutine(ScoreCards());
+            yield return new WaitForSeconds(1f);
+
+            foreach(GameObject dice in diceCollection){
+                dice.GetComponent<DiceRoll>().hasBeenRolled = false;
+                dice.GetComponent<DiceRoll>().accountedFor = false;
+                canStartScoring = true;
+                ScoringDice = false;
+                diceRoller.callReroll(dice);
+                yield return new WaitForSeconds(0.3f);
+            }
+        }else{
+            StartCoroutine(ScoreCards());
+            hasRerolled = false;
+            shouldReroll = false;
+        }
+
     }
 
 
@@ -307,16 +330,6 @@ public class Score : MonoBehaviour
             diceDisplay.DiceAdded(dice);
             yield return new WaitForSeconds(0.2f);
         }
-    }
-
-    //spawns a world space gui above the dice with the respective number scored
-    IEnumerator DisplayFaceValue(string faceText, GameObject dice){
-
-        GameObject textPopup = Instantiate(FaceValueDisplay, dice.GetComponent<DiceRoll>().emptyFacingup.position + GuiOffset, Quaternion.identity, dice.GetComponent<DiceRoll>().emptyFacingup);
-        textPopup.GetComponentInChildren<TMP_Text>().text = faceText;
-        yield return new WaitForSeconds(1f);
-        Destroy(textPopup);
-
     }
 
     //fades text elements, adjusts step value on the disolve shader and spawns the weapon

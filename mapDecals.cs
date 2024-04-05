@@ -8,7 +8,6 @@ public class mapDecals : MonoBehaviour
 {
     private bool active = false;
 
-    public Vector3 size;
     public int connections;
 
     GameController gameController;
@@ -34,12 +33,12 @@ public class mapDecals : MonoBehaviour
 
     //icon get bigger or icon get smaller me thinks this explains itself
     void OnMouseOver(){
-        gameObject.GetComponent<DecalProjector>().size = size*1.25f;
+        transform.GetChild(0).localScale = new Vector3(1,1,1)*1.25f;
         active = true;
     }
 
      void OnMouseExit(){
-        gameObject.GetComponent<DecalProjector>().size = size;
+        transform.GetChild(0).localScale = new Vector3(1,1,1);
         active = false;
     }
 }

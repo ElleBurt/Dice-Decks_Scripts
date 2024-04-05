@@ -29,6 +29,7 @@ public class MapEvents : MonoBehaviour {
     public bool SelectedMiniDied = false;
     private GenMap genMap;
     private GameObject activeSword;
+    
 
 
 
@@ -204,6 +205,10 @@ public class MapEvents : MonoBehaviour {
     }
 
     private IEnumerator AttackPhase(){
+
+        yield return new WaitForSeconds(1.5f);
+
+        SelectedEncounter.GetComponent<MiniScript>().TickDamageInflicted();
 
         yield return new WaitForSeconds(1.5f);
 

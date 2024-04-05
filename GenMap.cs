@@ -4,12 +4,13 @@ using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UnityEngine.UI;
 
 
 
 public class GenMap : MonoBehaviour
 {   
-
+    
     [Header("General")]
     public int encounterCount;
     public Vector2 miniBossCount;
@@ -37,9 +38,6 @@ public class GenMap : MonoBehaviour
 
     
 
-    //the prefab to add the decal to
-    public GameObject decalPrefab;
-
     //Dictionary that stores the connections between icons
     public Dictionary<GameObject,List<GameObject>> connectedIcons = new Dictionary<GameObject,List<GameObject>>();
 
@@ -64,10 +62,9 @@ public class GenMap : MonoBehaviour
     public void HighlightPaths(Transform LastIconTransform){
 
         foreach(Transform dash in LastIconTransform){
-            Material highlightedDash = new Material(dash.gameObject.GetComponent<DecalProjector>().material);
-            highlightedDash.color = Color.red;
-            highlightedDash.SetColor("_EmissiveColor", Color.red * 5000f);
-            dash.gameObject.GetComponent<DecalProjector>().material = highlightedDash;
+            if(dash.childCount > 0){
+                dash.transform.GetChild(0).GetComponent<Image>().color = new Color32(255,0,0,255);
+            }
         }
     }   
 
@@ -75,14 +72,14 @@ public class GenMap : MonoBehaviour
         //get a number of rows from the given bounds
         int numOfRows = Mathf.CeilToInt(Random.Range(mapRows.x,mapRows.y));
         //get the space in which the rows will be held
-        int mapZDiferential = Mathf.CeilToInt(mapRangeZ.y - mapRangeZ.x);
+        int mapXDiferential = Mathf.CeilToInt(Mathf.Abs(mapRangeX.x) - Mathf.Abs(mapRangeX.y));
         //get the hight of each rows bounds
-        int rowDifference = mapZDiferential / numOfRows;
+        int rowDifference = mapXDiferential / numOfRows;
 
         //gets a list of which rows will contain encounters
         List<int> encounters = EncounterRows(numOfRows); 
 
-        //sets the bounds of where the icons can spawn within each row (z-range)
+        //sets the bounds of where the icons can spawn within each row (x-range)
         Vector2 rowBounds = new Vector2(-(rowDifference/2) + rowPadding , (rowDifference/2) - rowPadding);
 
         //loops through all the rows we want to add
@@ -110,39 +107,28 @@ public class GenMap : MonoBehaviour
             foreach(Vector3 iconPos in allIconPositions){
 
                 //makes new decal game object
-                GameObject icon = GameObject.Instantiate(decalPrefab,iconPos,Quaternion.identity);
+
+                GameObject icon = GameObject.Instantiate(Resources.Load<GameObject>("UI/Prefabs/IconTemp"),iconPos,Quaternion.Euler(Vector3.zero));
+
+                
 
                 //ternary to check if the row is the starting point or the end point
                 IconTemplate icoTemp = (i == 0) ? startIcon : (i == numOfRows-1) ? bossIcon : (encounters.Contains(i)) ? encounterIcon : iconTemplates[Random.Range(0,iconTemplates.Count)];
                
-                icon.transform.rotation = Quaternion.Euler(90,0,0);
-                //sets parent to the column
-                icon.transform.SetParent(row.transform);
+                
                 //sets the relevant name
+                icon.transform.rotation = Quaternion.Euler(-90,90,0);
                 icon.name = icoTemp.name;
                 icon.transform.tag = icoTemp.tag;
+                icon.transform.localScale = new Vector3(iconSize,iconSize,iconSize);
 
-                //gets the decal projector
-                DecalProjector Dp = icon.GetComponent<DecalProjector>();
+                icon.transform.GetChild(0).GetComponent<Image>().sprite = icoTemp.Icon;
 
-                Dp.size = new Vector3(iconSize, iconSize, 10);
-
-                //creates new material blueprint
-                Material newMat = new Material(Dp.material);
-                
-                //sets the local scripts size var to the current size of the decal projector
-                icon.GetComponent<mapDecals>().size = Dp.size;
-                
-                //sets the relevant base map and alpha
-                newMat.SetTexture("_MaskMap", icoTemp.iconAlpha);
-                newMat.SetTexture("_EmissiveColorMap", icoTemp.iconAlpha);
-                newMat.SetTexture("_BaseColorMap", icoTemp.iconColor);
+                //sets parent to the column
+                icon.transform.SetParent(row.transform);
 
                 //starts coroutine to fade the decals in on top of the map
-                StartCoroutine(FadeFactor(Dp));
-
-                //sets decal projectors material to the new material
-                Dp.material = newMat;
+                StartCoroutine(FadeFactor(icon.transform.GetChild(0).GetComponent<Image>()));
             }
         }
 
@@ -178,9 +164,12 @@ public class GenMap : MonoBehaviour
 
     //used to generate icon positions within the give range on the given row, making sure no overlapping occurs
     private Vector3 generateIconPosition(int Row, Vector2 rowBounds, int rowDifference, List<Vector3> allIconPositions){
+        float zPos = Random.Range(mapRangeZ.x,mapRangeZ.y);
+
+        float yDif = Mathf.Abs(zPos - 10f)/20f;
 
         //generates random position within given bounds
-        Vector3 iconPos = new Vector3(Random.Range(mapRangeX.x,mapRangeX.y),0,mapRangeZ.x + (rowDifference * Row+1) + Random.Range(rowBounds.x,rowBounds.y));
+        Vector3 iconPos = new Vector3(mapRangeX.x - (rowDifference * Row+1) - Random.Range(rowBounds.x,rowBounds.y),25f + yDif,zPos);
 
         //simple bool to toggle if it intersects an existing icon
         bool posExists = false;
@@ -319,11 +308,12 @@ public class GenMap : MonoBehaviour
 
         //sets the direction in which the icon is
         Vector3 heading = (next.position - current.position).normalized;
+        
         //sets the distance to the icon
         float distance = Vector3.Distance(current.position, next.position);
 
         //placeholder angle
-        float angle = heading.x*65;
+        float angle = Vector3.Angle( current.transform.right, current.position - next.position  );
 
         
         //loops through the distance divided by the line spacing
@@ -332,40 +322,27 @@ public class GenMap : MonoBehaviour
             //sets the position and offsets based on heading
             Vector3 dashPos = current.position + dash * heading;
 
+
+            float yDif = Mathf.Abs(dashPos.z - 10f)/20f;
+
+            dashPos = new Vector3(dashPos.x,25f + yDif,dashPos.z);
+
+
             //checks if the distance between the dash and the next icon is less than 2 and if its greater than 1 from the starting icon
-            if(Vector3.Distance(dashPos, next.position) > 2f && Vector3.Distance(dashPos, current.position) > 1f){
+            if(Vector3.Distance(dashPos, next.position) > 0.8f && Vector3.Distance(dashPos, current.position) > 0.8f){
 
                 //instantiates the new decal, sets the rotation to the angle stated above, position to the dashPos with a small offset and sets the parent to the starting icon
-                GameObject decal = GameObject.Instantiate(decalPrefab, dashPos + new Vector3(Random.Range(-0.3f,0.3f),0,0), Quaternion.identity);
-                decal.transform.rotation = Quaternion.Euler(90,angle,0);
-                decal.transform.SetParent(current);
-                decal.name = dashIcon.name;
-
-                //gets the box collider component of the decal and disables it, so there is no mouse interactions
-                decal.GetComponent<BoxCollider>().enabled = false;
-
-                //gets the projector
-                DecalProjector Dp = decal.GetComponent<DecalProjector>();
-
-                //copies material as new
-                Material newMat = new Material(Dp.material);
-
-                //makes the decals smaller than the icons would be
-                Dp.size = new Vector3(iconSize/2f, iconSize/2f, 10);
-
-                //sets the size on the local script
-                decal.GetComponent<mapDecals>().size = Dp.size;
+                GameObject icon = GameObject.Instantiate(Resources.Load<GameObject>("UI/Prefabs/IconTemp"),dashPos + new Vector3(Random.Range(-0.3f,0.3f),0,0),Quaternion.Euler(Vector3.zero));
+                icon.transform.rotation = Quaternion.Euler(90,0,angle);
                 
-                //sets the materials
-                newMat.SetTexture("_MaskMap", dashIcon.iconAlpha);
-                newMat.SetTexture("_EmissiveColorMap", dashIcon.iconAlpha);
-                newMat.SetTexture("_BaseColorMap", dashIcon.iconColor);
+                icon.name = dashIcon.name;
+                icon.transform.localScale = new Vector3(iconSize/2f,iconSize/2f,iconSize/2f);
+
+                icon.transform.GetChild(0).GetComponent<Image>().sprite = dashIcon.Icon;
 
                 //fades in
-                StartCoroutine(FadeFactor(Dp));
-                
-                //sets the new material
-                Dp.material = newMat;
+                StartCoroutine(FadeFactor(icon.transform.GetChild(0).GetComponent<Image>()));
+                icon.transform.SetParent(current);
             }
             
         }
@@ -373,29 +350,29 @@ public class GenMap : MonoBehaviour
     }
 
     //fades the icons in
-    IEnumerator FadeFactor(DecalProjector Dp){
+    IEnumerator FadeFactor(Image icon){
         
         float fadeNum = 0.0f;
-        Dp.fadeFactor = fadeNum;
-        yield return new WaitForSeconds(3f);
+        icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
+        yield return new WaitForSeconds(2f);
 
-        while(Dp.fadeFactor < 1){
-            fadeNum += 0.01f;
-            Dp.fadeFactor = fadeNum;
-            yield return new WaitForSeconds(0.01f);
+        while(fadeNum < 225){
+            fadeNum += 2f;
+            icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
+            yield return null;
         }
     }
 
     //fades the icons out
-    IEnumerator FadeFactorReverse(DecalProjector Dp){
+    IEnumerator FadeFactorReverse(Image icon){
         
-        float fadeNum = 1.0f;
-        Dp.fadeFactor = fadeNum;
+        float fadeNum = 225.0f;
+        icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
 
-        while(Dp.fadeFactor > 0){
-            fadeNum -= 0.04f;
-            Dp.fadeFactor = fadeNum;
-            yield return new WaitForSeconds(0.01f);
+        while(fadeNum > 0){
+            fadeNum -= 2f;
+            icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
+            yield return null;
         }
     }
 
@@ -407,15 +384,13 @@ public class GenMap : MonoBehaviour
         icons.AddRange(GameObject.FindGameObjectsWithTag("Start"));
 
         if(show){
-            foreach(GameObject dp in icons){
-                DecalProjector decal = dp.GetComponent<DecalProjector>();
-                StartCoroutine(FadeFactor(decal));
+            foreach(GameObject icon in icons){
+                StartCoroutine(FadeFactor(icon.transform.GetChild(0).GetComponent<Image>()));
             }
             ReDrawEnvironment();
         }else{
-            foreach(GameObject dp in icons){
-                DecalProjector decal = dp.GetComponent<DecalProjector>();
-                StartCoroutine(FadeFactorReverse(decal));
+            foreach(GameObject icon in icons){
+                StartCoroutine(FadeFactorReverse(icon.transform.GetChild(0).GetComponent<Image>()));
             }
             
         }
@@ -427,12 +402,11 @@ public class GenMap : MonoBehaviour
         for(int i = 0; i < 300; i++){
 
             //sets the bounds of the map and randomly selects a position in it
-            float Xpos = Random.Range(-40f,46f);
+            float Zpos = Random.Range(mapRangeZ.x - 7f,mapRangeZ.y + 7f);
 
-            //because i made the map curved when layed out for whatever reason, this sets the offset on the y relative to how far it is from the center line
-            float ajustedXPos = Xpos > 3f ? Xpos - 5f : Xpos;
-            float Ypos = Mathf.Abs(ajustedXPos)/17.5f - 2.8f;
-            float Zpos = Random.Range(27.5f,155.5f);
+            float Ypos = Mathf.Abs(Zpos - 10f)/20f;
+
+            float Xpos = Random.Range(mapRangeX.x,mapRangeX.y);
 
             //bool to state is selected pos is colliding with a decal
             bool hitObstacle = false;
@@ -446,24 +420,17 @@ public class GenMap : MonoBehaviour
             points.AddRange(GameObject.FindGameObjectsWithTag("Enviro"));
             points.AddRange(GameObject.FindGameObjectsWithTag("Start"));
 
-            //checks all decals in the scene to see if colliding
+            //checks all decals and trees in the scene to see if colliding
             foreach(GameObject point in points){
-                if(Vector3.Distance(spawnPos, point.transform.position) < 3.5f){
+                if(Vector3.Distance(new Vector3(spawnPos.x,0,spawnPos.z), new Vector3(point.transform.position.x,0,point.transform.position.z)) < 1f){
                     hitObstacle = true;
                     break;
                 }
             }
             
             //if bool was not triggered then we can spawn the object
-            GameObject spawnObj;
-            Quaternion spawnRot;
-
-            spawnObj = treefab;
-            spawnRot = Quaternion.Euler(0,0,0);
-        
-
             if(!hitObstacle){
-                GameObject tree = GameObject.Instantiate(spawnObj, spawnPos + new Vector3(0,-10, 0), Quaternion.identity * spawnRot);
+                GameObject tree = GameObject.Instantiate(treefab, spawnPos + new Vector3(0,14f,0), Quaternion.Euler(0,0,0));
                 StartCoroutine(moveUp(tree,tree.transform.position));
                 allMapEnviromentalsPos.Add(tree.transform.position);
             }

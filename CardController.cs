@@ -56,6 +56,7 @@ public class CardController : MonoBehaviour
         descriptionText.text = cardTemplate.description;
         img.sprite = cardTemplate.imgOverlay;
         effectImage.sprite = cardTemplate.effectOverlay;
+        sellText.text = $"${cardTemplate.baseSellValue}";
         gameObject.GetComponent<MeshRenderer>().material.SetTexture("_EffectTex",cardTemplate.effectAlpha);
     }
 

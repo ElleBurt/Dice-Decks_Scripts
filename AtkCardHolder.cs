@@ -17,6 +17,7 @@ public class AtkCardTypes{
 public class AtkCardHolder : MonoBehaviour
 {
     DiceRoller diceRoller;
+    Score score;
 
     public int maxCards;
     private int cardCount;
@@ -33,7 +34,7 @@ public class AtkCardHolder : MonoBehaviour
     void Start()
     {   //spawn cards in
         diceRoller = FindObjectOfType<DiceRoller>();
-        
+        score = FindObjectOfType<Score>();
         
     }
 
@@ -49,7 +50,7 @@ public class AtkCardHolder : MonoBehaviour
         Image img = newCard.CardBase.transform.Find("Canvas").Find("Icon").GetComponent<Image>();
         TMP_Text atkValue = newCard.CardBase.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>();
 
-        atkValue.text = "";
+        atkValue.text = "0";
         img.sprite = card.OverlayTexture;
 
         newCard.CardBase.transform.rotation = Quaternion.Euler(19,-90,90);
@@ -91,7 +92,6 @@ public class AtkCardHolder : MonoBehaviour
             ActiveCard = card;
             CardsInHolder.RemoveAt(CardsInHolder.Count - 1);
             gameObject.GetComponent<AudioSource>().Play();
-
             
         }   
         

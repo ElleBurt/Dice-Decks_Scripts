@@ -11,17 +11,21 @@ public class ScoreDice : MonoBehaviour
 {
     DiceRoller diceRoller;
     Score scoreScript;
+    MapEvents events;
+
+    private Dictionary<DiceType, Action<string>> Processes;
+    private MiniScript SelectedEncounter;
 
     void Start(){
         diceRoller = FindObjectOfType<DiceRoller>();
         scoreScript = FindObjectOfType<Score>();
+        events = FindObjectOfType<MapEvents>();
+       
     }
-
-    private Dictionary<DiceType, Action<GameObject, string>> Processes;
 
     public ScoreDice()
     {
-        Processes = new Dictionary<DiceType, Action<GameObject, string>>{
+        Processes = new Dictionary<DiceType, Action<string>>{
             {DiceType.Basic, Basic},
             {DiceType.Multi, Multi},
             {DiceType.Roulette, Roulette},
@@ -34,6 +38,7 @@ public class ScoreDice : MonoBehaviour
     }
 
     public void ProcessDice(DiceType diceType, GameObject die, string value){
+        SelectedEncounter = events.SelectedEncounter.GetComponent<MiniScript>();
          //gets particle system
         var ResultsFX = die.GetComponentInChildren<ParticleSystem>();
         var trailsFX = ResultsFX.trails;
@@ -55,25 +60,31 @@ public class ScoreDice : MonoBehaviour
         ResultsFX.Play();
         scoreScript.pitch += 0.1f;
 
-        Processes[diceType](die,value);
+        Processes[diceType](value);
     }
 
-    private void Basic(GameObject die, string value){
+    private void Basic(string value){
         scoreScript.diceResults.Add(int.Parse(value));
         //sets the scoreText to the new score
         scoreScript.score += int.Parse(value);
         scoreScript.scoreText.text = scoreScript.score.ToString();
     }
-    private void Multi(GameObject die, string value){
+
+
+
+    private void Multi(string value){
+
         if(Regex.Match(value, @"\D").Success){
             scoreScript.UpdateMulti(int.Parse(Regex.Match(value, @"\d+").Value));
         }else{
-            scoreScript.diceResults.Add(int.Parse(value));
-            scoreScript.score += int.Parse(value);
-            scoreScript.scoreText.text = scoreScript.score.ToString();
+            Basic(value);
         }
+
     }
-    private void Roulette(GameObject die, string value){
+
+
+
+    private void Roulette(string value){
         switch(value){
             case "RC":
                 value = "Even";
@@ -95,19 +106,70 @@ public class ScoreDice : MonoBehaviour
             break;
         }
     }
-    private void Poker(GameObject die, string value){
 
+
+
+    private void Poker(string value){
+        switch(value){
+            case "Joker":
+
+            break;
+            
+            case "Ace":
+                Basic("11");
+            break;
+
+            default:
+                Basic("10");
+            break;
+        }
     }
-    private void Explosive(GameObject die, string value){
 
+
+
+    private void Explosive(string value){
+        if(value == "Explosion"){
+
+        }else{
+            Basic(value);
+        }
     }
-    private void Elemental(GameObject die, string value){
 
+
+
+    private void Elemental(string value){
+        SelectedEncounter.EffectInflicted = value;
+        switch(value){
+            case "Poison":
+                SelectedEncounter.TickDamage = 3;
+            break;
+            case "Fire":
+                SelectedEncounter.TickDamage = 2;
+            break;
+            case "Freeze":
+                SelectedEncounter.TickDamage = 1;
+            break;
+        }
     }
-    private void ReRoll(GameObject die, string value){
 
+
+
+    private void ReRoll(string value){
+        if(value=="ReRoll"){
+            scoreScript.shouldReroll = true;
+        }else{
+            Basic(value);
+        }
     }
-    private void Luck(GameObject die, string value){
 
+
+
+    private void Luck(string value){
+        switch(value){
+            case "Voodoo":
+            break;
+            case "Luck":
+            break;
+        }
     }
 }

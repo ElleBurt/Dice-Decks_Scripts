@@ -251,11 +251,12 @@ public class GameController : MonoBehaviour
     public IEnumerator MapViewAnim(){
         cameraAlignedToDice = false;
         yield return new WaitForSeconds(2f);
-        while(Vector3.Distance(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,35,-15)) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,35,-15), cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(46.2f,0f,0f), cameraMoveSpeed * Time.deltaTime);
+        while(Vector3.Distance(mainCamera.transform.position, lastIconTransform.position + new Vector3(5,10,0)) > 0.1f){
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, lastIconTransform.position + new Vector3(5,10,0), cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(46.2f,-90f,0f), cameraMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
+        yield return new WaitForSeconds(1f);
         StartCoroutine(DropPlayerToken());
     }
 
@@ -265,7 +266,7 @@ public class GameController : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         while(Vector3.Distance(mainCamera.transform.position, DiceView.position) > 0.1f){
             mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, DiceView.position, cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(24.4f,0f,0f), cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(24.4f,-90f,0f), cameraMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
         cameraAlignedToDice = true;

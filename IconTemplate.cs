@@ -6,8 +6,9 @@ using UnityEngine;
 public class IconTemplate : ScriptableObject {
     
     public new string name;
-    public Texture2D iconColor;
-    public Texture2D iconAlpha;
+    //public Texture2D iconColor;
+    //public Texture2D iconAlpha;
+    public Sprite Icon;
     public string tag;
 
 }
