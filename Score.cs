@@ -362,13 +362,6 @@ public class Score : MonoBehaviour
 
             multiText.color = new Color(multiText.color.r, multiText.color.g, multiText.color.b, CurrentValueInvert);
 
-            card.GetComponent<MeshRenderer>().materials[1].SetFloat("_Alpha", CurrentValueInvert);
-
-            if(Elapsed < TimeValue - 0.2f && !swordSpawned){
-                swordSpawned = true;
-                GameObject weapon = GameObject.Instantiate(atkCardHolder.ActiveCard.Weapon, atkCardHolder.ActiveCard.CardBase.transform.position - new Vector3(-0.7f, 1.55f, -0.17f), Quaternion.identity);
-            }
-
             yield return null;
         }
 

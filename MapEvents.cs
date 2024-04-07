@@ -71,7 +71,7 @@ public class MapEvents : MonoBehaviour {
 
         encounter.GetComponent<MiniScript>().selected = true;
         
-        GameObject sword = GameObject.Instantiate(SelectedSword, encounter.transform.position + new Vector3(0,encounter.transform.localScale.y + 10f,0),Quaternion.identity * Quaternion.Euler(90,0,0));
+        GameObject sword = GameObject.Instantiate(SelectedSword, encounter.transform.position + new Vector3(0,encounter.transform.localScale.y + 5f,0),Quaternion.identity * Quaternion.Euler(90,0,0));
         StartCoroutine(SpinSword(sword));
         SelectedEncounter = encounter;
         activeSword = sword;

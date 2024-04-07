@@ -58,13 +58,6 @@ public class AtkCardHolder : MonoBehaviour
         newCard.Weapon = card.Weapon;
         CardsInHolder.Add(newCard);
         
-        Material[] Materials = newCard.CardBase.GetComponent<MeshRenderer>().materials;
-
-        Material Outline = Materials[1];
-
-        Outline.SetFloat("_OutlineOn", 0);
-
-
         UpdateCards(newCard);
     }
     
@@ -110,24 +103,15 @@ public class AtkCardHolder : MonoBehaviour
 
     //moves the card but turns on outline changes the alpha dependent on distance from destination
     IEnumerator MoveCard(AtkCardTypes card){
-        Material[] Materials = card.CardBase.GetComponent<MeshRenderer>().materials;
-
-        Material Outline = Materials[1];
-
-        Outline.SetFloat("_OutlineOn", 1);
-        Outline.SetFloat("_Alpha",0);
-
-
+        card.CardBase.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>().text = "0";
         while(Vector3.Distance(card.CardBase.transform.position, activeAtkPos.position) > 0.01f){
-            float dist = Mathf.Clamp01(Vector3.Distance(card.CardBase.transform.position, transform.position));
-
-            Outline.SetFloat("_Alpha",dist);
+            
 
             card.CardBase.transform.position = Vector3.Lerp(card.CardBase.transform.position, activeAtkPos.position, cardSpeed * Time.deltaTime);
             card.CardBase.transform.rotation = Quaternion.Slerp(card.CardBase.transform.rotation ,Quaternion.Euler(0,180,0), cardSpeed * Time.deltaTime);
             yield return null;
         }
-        card.CardBase.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>().text = "0";
+        
         
     }
 }
