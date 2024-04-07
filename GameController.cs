@@ -255,7 +255,6 @@ public class GameController : MonoBehaviour
             mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(46.2f,0f,0f), cameraMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
-        yield return new WaitForSeconds(1f);
         StartCoroutine(DropPlayerToken());
     }
 

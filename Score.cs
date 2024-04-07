@@ -338,7 +338,6 @@ public class Score : MonoBehaviour
         float EndValue = 1f;
         float TimeValue = 1f;
         float Elapsed = 0f;
-        bool swordSpawned = false;
 
         GameObject card = atkCardHolder.ActiveCard.CardBase;
 
@@ -371,7 +370,7 @@ public class Score : MonoBehaviour
 
         atkCardHolder.ActiveCard = null;
 
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(1f);
         
         //let player roll again
         diceRoller.canRoll = true;

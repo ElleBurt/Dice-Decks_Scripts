@@ -53,7 +53,7 @@ public class AtkCardHolder : MonoBehaviour
 
         img.sprite = card.OverlayTexture;
 
-        newCard.CardBase.transform.rotation = Quaternion.Euler(19,-90,90);
+        newCard.CardBase.transform.rotation = Quaternion.Euler(90,-90,90);
 
         newCard.Weapon = card.Weapon;
         CardsInHolder.Add(newCard);
@@ -64,7 +64,7 @@ public class AtkCardHolder : MonoBehaviour
     //edits position of the card depending on how many cards
     void UpdateCards(AtkCardTypes card){
 
-        Vector3 cardOffset = new Vector3(0.2f*CardsInHolder.Count,0f,0f);
+        Vector3 cardOffset = new Vector3(0,CardsInHolder.Count*0.05f,0f);
         
         card.CardBase.transform.position = card.CardBase.transform.position + cardOffset;
 

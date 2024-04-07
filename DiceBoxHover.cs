@@ -10,7 +10,7 @@ public class DiceBoxHover : MonoBehaviour
 {
     public bool animFin = false;
     DiceRoller diceRoller;
-    private bool hovered = false;
+    public bool hovered = false;
     public GameObject ItemDesc;
 
     private GameObject openDesc;
@@ -30,12 +30,13 @@ public class DiceBoxHover : MonoBehaviour
                 Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";
                 Desc.transform.Find("RightSide").Find("SideInfo").Find("High").GetComponent<TMP_Text>().text = $"Highest: {dt.hiVal}";
                 Desc.transform.Find("RightSide").Find("SideInfo").Find("Low").GetComponent<TMP_Text>().text = $"Lowest: {dt.loVal}";
+                Desc.transform.SetParent(dice.transform);
 
                 Transform SpecFaces = Desc.transform.Find("RightSide").Find("Faces");
 
                 int index = 0;
                 foreach(Transform child in dice.transform){
-                    if(Regex.IsMatch(child.name,@"\D") && child.name != "DiceResult"){
+                    if(Regex.IsMatch(child.name,@"\D") && child.name != "DiceResult" && child.name != "ItemDesc(Clone)"){
                         GameObject faceTemp = Instantiate(Resources.Load($"UI/Prefabs/FaceTemp") as GameObject);
                         faceTemp.transform.Find("Face").GetComponent<Image>().sprite = (Resources.Load<Sprite>($"UI/Faces/{child.name}"));
                         faceTemp.transform.SetParent(SpecFaces);

@@ -83,6 +83,16 @@ public class DiceBoxController : MonoBehaviour
     }
 
     public void closeBox(Transform child){
+        foreach(Transform col in transform){
+            if(col.CompareTag("DiceBoxSpawn")){
+                col.gameObject.GetComponent<DiceBoxHover>().animFin = false;
+                col.gameObject.GetComponent<DiceBoxHover>().hovered = false;
+                col.GetComponent<CapsuleCollider>().enabled = false;
+                
+            }
+        }
+
+        Destroy(child.gameObject,0.1f);
         StartCoroutine(ThrowBox());
     }
 
