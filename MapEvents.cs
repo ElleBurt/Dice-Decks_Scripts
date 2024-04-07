@@ -46,7 +46,7 @@ public class MapEvents : MonoBehaviour {
         Scroll = GameObject.Instantiate(map, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
         Material newMat = new Material(Scroll.GetComponent<SkinnedMeshRenderer>().material);
-        newMat.SetTexture("_BaseColorMap", texture);
+        newMat.SetTexture("_BaseMap", texture);
         Scroll.GetComponent<SkinnedMeshRenderer>().material = newMat;
     }
 

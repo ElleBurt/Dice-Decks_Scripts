@@ -33,7 +33,7 @@ public class CardHolder : MonoBehaviour
             GameObject card = GameObject.Instantiate(CardPrefab, spawnPoint, Quaternion.identity * Quaternion.Euler(-15,-185,0));
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
             card.GetComponent<CardController>().SetupCard();
-            card.transform.SetParent(transform.GetChild(CardsHeld.Count));
+            card.transform.SetParent(transform);
             CardsHeld.Add(card);
             CardsUpdated();
         }

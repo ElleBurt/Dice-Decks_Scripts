@@ -20,11 +20,11 @@ public class DiceBoxHover : MonoBehaviour
     }
     private void OnMouseEnter() {
         if(animFin){
-            transform.GetChild(0).position = transform.position + new Vector3(0, 4, 0);
+            transform.GetChild(0).position = transform.position + new Vector3(0, 2, 0);
             hovered = true;
 
             if(openDesc == null){
-                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,12,0)),Quaternion.Euler(Vector3.zero));
+                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5,0)),Quaternion.Euler(Vector3.zero));
                 GameObject dice = transform.GetChild(0).gameObject;
                 DiceTemplate dt = dice.GetComponent<DiceRoll>().diceTemplate;
                 Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";
@@ -56,7 +56,7 @@ public class DiceBoxHover : MonoBehaviour
     }
     private void OnMouseExit() {
         if(animFin){
-            transform.GetChild(0).position = transform.position + new Vector3(0, 2, 0);
+            transform.GetChild(0).position = transform.position ;
             hovered = false;
         }
         if(openDesc != null){

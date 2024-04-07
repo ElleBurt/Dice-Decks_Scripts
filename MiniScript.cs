@@ -54,8 +54,8 @@ public class MiniScript : MonoBehaviour
         //ternary opperator for knowing if to add or subtract health
         float NewHealth = Damaged ? CurrentHealth -= ChangeFactor : CurrentHealth += ChangeFactor;
 
-        float MinVileValue = 2.5f;
-        float MaxVileValue = -1f;
+        float MinVileValue = 2.1f;
+        float MaxVileValue = -0.5f;
         float HealthPercentile = NewHealth / MaxHealth;
         
 

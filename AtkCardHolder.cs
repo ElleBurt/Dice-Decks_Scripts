@@ -21,6 +21,7 @@ public class AtkCardHolder : MonoBehaviour
 
     public int maxCards;
     private int cardCount;
+    public Transform activeAtkPos;
 
     public int cardSpeed;
 
@@ -50,7 +51,6 @@ public class AtkCardHolder : MonoBehaviour
         Image img = newCard.CardBase.transform.Find("Canvas").Find("Icon").GetComponent<Image>();
         TMP_Text atkValue = newCard.CardBase.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>();
 
-        atkValue.text = "0";
         img.sprite = card.OverlayTexture;
 
         newCard.CardBase.transform.rotation = Quaternion.Euler(19,-90,90);
@@ -110,7 +110,6 @@ public class AtkCardHolder : MonoBehaviour
 
     //moves the card but turns on outline changes the alpha dependent on distance from destination
     IEnumerator MoveCard(AtkCardTypes card){
-
         Material[] Materials = card.CardBase.GetComponent<MeshRenderer>().materials;
 
         Material Outline = Materials[1];
@@ -119,15 +118,16 @@ public class AtkCardHolder : MonoBehaviour
         Outline.SetFloat("_Alpha",0);
 
 
-        while(Vector3.Distance(card.CardBase.transform.position, GameObject.Find("AtkCardActivePos").transform.position) > 0.01f){
+        while(Vector3.Distance(card.CardBase.transform.position, activeAtkPos.position) > 0.01f){
             float dist = Mathf.Clamp01(Vector3.Distance(card.CardBase.transform.position, transform.position));
 
             Outline.SetFloat("_Alpha",dist);
 
-            card.CardBase.transform.position = Vector3.Lerp(card.CardBase.transform.position, GameObject.Find("AtkCardActivePos").transform.position, cardSpeed * Time.deltaTime);
+            card.CardBase.transform.position = Vector3.Lerp(card.CardBase.transform.position, activeAtkPos.position, cardSpeed * Time.deltaTime);
             card.CardBase.transform.rotation = Quaternion.Slerp(card.CardBase.transform.rotation ,Quaternion.Euler(0,180,0), cardSpeed * Time.deltaTime);
             yield return null;
         }
+        card.CardBase.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>().text = "0";
         
     }
 }

@@ -45,16 +45,16 @@ public class CardBoosterController : MonoBehaviour
     }
 
     public IEnumerator OpenSequence(){
-        StartCoroutine(MapViewAnim());
+        StartCoroutine(diceView());
         for(float i = 1f; i < 4f; i++){
-            AddCard(i/4f);
+            AddCard(i/15f);
         }
         yield return new WaitForSeconds(2);
 
-        Vector3 moveTo = cardSelectionPos - new Vector3(15,0,0);
+        Vector3 moveTo = cardSelectionPos - new Vector3(5,0,0);
         foreach(Transform card in transform.Find("cardSpawnPoint")){
             StartCoroutine(MoveCard(card,moveTo));
-            moveTo += new Vector3(15,0,0);
+            moveTo += new Vector3(5,0,0);
         }
     }
 
@@ -62,18 +62,23 @@ public class CardBoosterController : MonoBehaviour
         CardTemplate cardTemplate = gameController.CardTemplates[Random.Range(0,gameController.CardTemplates.Count)];
         GameObject card = GameObject.Instantiate(gameController.cardPrefab, transform.Find("cardSpawnPoint").position + new Vector3(0,0,-offset), Quaternion.identity * Quaternion.Euler(0,0,0));
         card.transform.SetParent(transform.Find("cardSpawnPoint"));
-        card.transform.localScale *= 2;
         card.GetComponent<CardController>().cardTemplate = cardTemplate;
+        card.GetComponent<CardController>().boosterCard = true;
         card.GetComponent<CardController>().SetupCard();
     }
     
-    public IEnumerator MapViewAnim(){
-        yield return new WaitForSeconds(2f);
-        while(Vector3.Distance(mainCamera.transform.position, MapView.position) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, MapView.position, cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(46.2f,0f,0f), cameraMoveSpeed * Time.deltaTime);
+    private IEnumerator diceView(){
+        Camera mainCamera = gameController.mainCamera;
+        float cameraMoveSpeed = gameController.cameraMoveSpeed;
+        Transform boxView = GameObject.FindGameObjectsWithTag("DiceBox")[0].transform;
+        yield return new WaitForSeconds(1.5f);
+        while(Vector3.Distance(mainCamera.transform.position, boxView.position) > 0.1f){
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, boxView.position, cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(30f,0f,0f), cameraMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
+        
+        
     }
 
     public IEnumerator MoveCard(Transform card, Vector3 moveTo){

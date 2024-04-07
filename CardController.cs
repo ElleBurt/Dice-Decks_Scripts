@@ -34,6 +34,7 @@ public class CardController : MonoBehaviour
     private bool atTop = false;
 
     public bool canPickup = false;
+    public bool boosterCard = false;
     
 
 
@@ -77,9 +78,26 @@ public class CardController : MonoBehaviour
     }
 
     void Update(){
-        if(canPickup && entered && Input.GetMouseButtonDown(0)){
+        if(boosterCard && !canPickup){
+            gameObject.GetComponent<BoxCollider>().enabled = false;
+        }else if(boosterCard && canPickup && !entered){
+            gameObject.GetComponent<BoxCollider>().enabled = true;
+        }else if(boosterCard && canPickup && entered && Input.GetMouseButtonDown(0)){
             transform.parent.parent.GetComponent<CardBoosterController>().cardSelected(gameObject);
+        }else if(boosterCard && canPickup && entered){
+            baseRot = Quaternion.Euler(-30,180,0);
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.WorldToScreenPoint(transform.position).z));
+
+            Vector3 cardPos = transform.position;
+
+            Vector3 mouseDif = mousePos - cardPos;
+
+            mouseDif *= 1.5f;
+        
+            Quaternion newRot = Quaternion.Euler(baseRot.eulerAngles.x + -mouseDif.y , baseRot.eulerAngles.y + -mouseDif.x, baseRot.eulerAngles.z);
+            transform.rotation = Quaternion.Slerp(transform.rotation, newRot, 15f * Time.deltaTime);
         }
+
         if(!atTop && !isMoving && entered && Input.GetMouseButtonDown(0)){
             StartCoroutine(Hovered());
             gameObject.GetComponent<AudioSource>().Play();
@@ -101,19 +119,7 @@ public class CardController : MonoBehaviour
             Quaternion newRot = Quaternion.Euler(baseRot.eulerAngles.x + -mouseDif.y , baseRot.eulerAngles.y + -mouseDif.x, baseRot.eulerAngles.z);
             transform.rotation = Quaternion.Slerp(transform.rotation, newRot, 15f * Time.deltaTime); 
         }
-        if(canPickup && entered){
-            baseRot = Quaternion.Euler(-30,180,0);
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.WorldToScreenPoint(transform.position).z));
-
-            Vector3 cardPos = transform.position;
-
-            Vector3 mouseDif = mousePos - cardPos;
-
-            mouseDif *= 1.5f;
         
-            Quaternion newRot = Quaternion.Euler(baseRot.eulerAngles.x + -mouseDif.y , baseRot.eulerAngles.y + -mouseDif.x, baseRot.eulerAngles.z);
-            transform.rotation = Quaternion.Slerp(transform.rotation, newRot, 15f * Time.deltaTime);
-        }
         
             
         

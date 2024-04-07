@@ -62,7 +62,7 @@ public class DiceDisplay : MonoBehaviour
                 dice.position = basePos+hoverOffset;
                 
                 if(openDesc == null){
-                    GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(-10,9.3f,0)),Quaternion.identity);
+                    GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(-3,5.5f,0)),Quaternion.identity);
                     GameObject dice = transform.GetChild(0).gameObject;
                     DiceTemplate dt = dice.GetComponent<DiceRoll>().diceTemplate;
                     Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";

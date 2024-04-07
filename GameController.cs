@@ -97,8 +97,8 @@ public class GameController : MonoBehaviour
         //ternary opperator for knowing if to add or subtract health
         float NewHealth = Damaged ? CurrentHealth -= ChangeFactor : CurrentHealth += ChangeFactor;
 
-        float MinVileValue = 9;
-        float MaxVileValue = -7;
+        float MinVileValue = 5;
+        float MaxVileValue = -4;
         float HealthPercentile = NewHealth / MaxHealth;
         
 
@@ -197,15 +197,15 @@ public class GameController : MonoBehaviour
     public IEnumerator DropPlayerToken(){
         genMap.HighlightPaths(lastIconTransform);
         
-        float tokenOffset = Mathf.Abs(Vector3.Distance(lastIconTransform.position, new Vector3(3,0,0)))/17.5f;
-        float tokenYOffset = -4f;
+        
+        Vector3 tokenOffset = lastIconTransform.position;
         
 
         if(PlayerToken == null){
-            PlayerToken = GameObject.Instantiate(PlayerTokenPrefab, lastIconTransform.position + new Vector3(0,40,0), Quaternion.Euler(-90,0,0));
+            PlayerToken = GameObject.Instantiate(PlayerTokenPrefab, tokenOffset + new Vector3(0,30,0), Quaternion.Euler(-90,0,0));
         }
-        while(Vector3.Distance(PlayerToken.transform.position, (lastIconTransform.position + new Vector3(0,tokenYOffset + tokenOffset,0))) > 0.1f){
-            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position, (lastIconTransform.position + new Vector3(0,tokenYOffset + tokenOffset,0)), TokenMoveSpeed * Time.deltaTime);
+        while(Vector3.Distance(PlayerToken.transform.position,tokenOffset) > 0.1f){
+            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position,tokenOffset, TokenMoveSpeed * Time.deltaTime);
             yield return null;
         }
         cameraAlignedToMap = true;
@@ -213,11 +213,10 @@ public class GameController : MonoBehaviour
 
     //moves the player token to the selected icon
     public IEnumerator MovePlayerToken(){
-        float tokenOffset = Mathf.Abs(Vector3.Distance(currentIconTransform.position, new Vector3(3,0,0)))/17.5f;
-        float tokenYOffset = -4f;
+        Vector3 tokenOffset = currentIconTransform.position;
 
-        while(Vector3.Distance(PlayerToken.transform.position, (currentIconTransform.position + new Vector3(0,tokenYOffset + tokenOffset,0))) > 0.1f){
-            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position, (currentIconTransform.position + new Vector3(0,tokenYOffset + tokenOffset,0)), TokenMoveSpeed * Time.deltaTime);
+        while(Vector3.Distance(PlayerToken.transform.position,tokenOffset) > 0.1f){
+            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position, tokenOffset, TokenMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
 
@@ -251,9 +250,9 @@ public class GameController : MonoBehaviour
     public IEnumerator MapViewAnim(){
         cameraAlignedToDice = false;
         yield return new WaitForSeconds(2f);
-        while(Vector3.Distance(mainCamera.transform.position, lastIconTransform.position + new Vector3(5,10,0)) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, lastIconTransform.position + new Vector3(5,10,0), cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(46.2f,-90f,0f), cameraMoveSpeed * Time.deltaTime);
+        while(Vector3.Distance(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,10,-5)) > 0.1f){
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,10,-5), cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(46.2f,0f,0f), cameraMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
         yield return new WaitForSeconds(1f);
@@ -266,7 +265,7 @@ public class GameController : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         while(Vector3.Distance(mainCamera.transform.position, DiceView.position) > 0.1f){
             mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, DiceView.position, cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(24.4f,-90f,0f), cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(24.4f,0f,0f), cameraMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
         cameraAlignedToDice = true;

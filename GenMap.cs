@@ -63,7 +63,7 @@ public class GenMap : MonoBehaviour
 
         foreach(Transform dash in LastIconTransform){
             if(dash.childCount > 0){
-                dash.transform.GetChild(0).GetComponent<Image>().color = new Color32(255,0,0,255);
+                dash.transform.GetChild(0).GetComponent<Image>().color = new Color32((byte)255,(byte)0,(byte)0,(byte)255);
             }
         }
     }   
@@ -72,14 +72,14 @@ public class GenMap : MonoBehaviour
         //get a number of rows from the given bounds
         int numOfRows = Mathf.CeilToInt(Random.Range(mapRows.x,mapRows.y));
         //get the space in which the rows will be held
-        int mapXDiferential = Mathf.CeilToInt(Mathf.Abs(mapRangeX.x) - Mathf.Abs(mapRangeX.y));
+        int mapZDiferential = Mathf.Abs(Mathf.CeilToInt(mapRangeZ.x - mapRangeZ.y));
         //get the hight of each rows bounds
-        int rowDifference = mapXDiferential / numOfRows;
+        int rowDifference = mapZDiferential / numOfRows;
 
         //gets a list of which rows will contain encounters
         List<int> encounters = EncounterRows(numOfRows); 
 
-        //sets the bounds of where the icons can spawn within each row (x-range)
+        //sets the bounds of where the icons can spawn within each row (z-range)
         Vector2 rowBounds = new Vector2(-(rowDifference/2) + rowPadding , (rowDifference/2) - rowPadding);
 
         //loops through all the rows we want to add
@@ -117,7 +117,7 @@ public class GenMap : MonoBehaviour
                
                 
                 //sets the relevant name
-                icon.transform.rotation = Quaternion.Euler(-90,90,0);
+                icon.transform.rotation = Quaternion.Euler(-90,180,0);
                 icon.name = icoTemp.name;
                 icon.transform.tag = icoTemp.tag;
                 icon.transform.localScale = new Vector3(iconSize,iconSize,iconSize);
@@ -164,12 +164,12 @@ public class GenMap : MonoBehaviour
 
     //used to generate icon positions within the give range on the given row, making sure no overlapping occurs
     private Vector3 generateIconPosition(int Row, Vector2 rowBounds, int rowDifference, List<Vector3> allIconPositions){
-        float zPos = Random.Range(mapRangeZ.x,mapRangeZ.y);
+        float xPos = Random.Range(mapRangeX.x,mapRangeX.y);
 
-        float yDif = Mathf.Abs(zPos - 10f)/20f;
+        float yDif = Mathf.Abs(xPos - 108f)/40f;
 
         //generates random position within given bounds
-        Vector3 iconPos = new Vector3(mapRangeX.x - (rowDifference * Row+1) - Random.Range(rowBounds.x,rowBounds.y),25f + yDif,zPos);
+        Vector3 iconPos = new Vector3(xPos,24.85f + yDif,mapRangeZ.x + (rowDifference * Row+1) - Random.Range(rowBounds.x,rowBounds.y));
 
         //simple bool to toggle if it intersects an existing icon
         bool posExists = false;
@@ -304,6 +304,8 @@ public class GenMap : MonoBehaviour
     //simply draws a line from current icon to the next icon
     void RenderLine(Transform current, Transform next){
 
+        
+
         next.gameObject.GetComponent<mapDecals>().connections++;
 
         //sets the direction in which the icon is
@@ -313,8 +315,8 @@ public class GenMap : MonoBehaviour
         float distance = Vector3.Distance(current.position, next.position);
 
         //placeholder angle
-        float angle = Vector3.Angle( current.transform.right, current.position - next.position  );
-
+        float angle = Vector3.Angle( current.transform.right, current.position - next.position )+90f;
+        
         
         //loops through the distance divided by the line spacing
         for(float dash = 0; dash < distance; dash += lineSpacing ){
@@ -323,16 +325,16 @@ public class GenMap : MonoBehaviour
             Vector3 dashPos = current.position + dash * heading;
 
 
-            float yDif = Mathf.Abs(dashPos.z - 10f)/20f;
+            float yDif = Mathf.Abs(dashPos.x - 108f)/40f;
 
-            dashPos = new Vector3(dashPos.x,25f + yDif,dashPos.z);
+            dashPos = new Vector3(dashPos.x,24.85f + yDif,dashPos.z);
 
 
             //checks if the distance between the dash and the next icon is less than 2 and if its greater than 1 from the starting icon
             if(Vector3.Distance(dashPos, next.position) > 0.8f && Vector3.Distance(dashPos, current.position) > 0.8f){
 
                 //instantiates the new decal, sets the rotation to the angle stated above, position to the dashPos with a small offset and sets the parent to the starting icon
-                GameObject icon = GameObject.Instantiate(Resources.Load<GameObject>("UI/Prefabs/IconTemp"),dashPos + new Vector3(Random.Range(-0.3f,0.3f),0,0),Quaternion.Euler(Vector3.zero));
+                GameObject icon = GameObject.Instantiate(Resources.Load<GameObject>("UI/Prefabs/IconTemp"),dashPos + new Vector3(Random.Range(-0.1f,0.1f),0,0),Quaternion.identity);
                 icon.transform.rotation = Quaternion.Euler(90,0,angle);
                 
                 icon.name = dashIcon.name;
@@ -357,7 +359,7 @@ public class GenMap : MonoBehaviour
         yield return new WaitForSeconds(2f);
 
         while(fadeNum < 225){
-            fadeNum += 2f;
+            fadeNum = fadeNum + 2f > 255f ? 255 : fadeNum + 2f;
             icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
             yield return null;
         }
@@ -370,7 +372,7 @@ public class GenMap : MonoBehaviour
         icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
 
         while(fadeNum > 0){
-            fadeNum -= 2f;
+            fadeNum = fadeNum - 2f < 2f ? 0 : fadeNum - 2f;
             icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
             yield return null;
         }
@@ -402,11 +404,9 @@ public class GenMap : MonoBehaviour
         for(int i = 0; i < 300; i++){
 
             //sets the bounds of the map and randomly selects a position in it
-            float Zpos = Random.Range(mapRangeZ.x - 7f,mapRangeZ.y + 7f);
-
-            float Ypos = Mathf.Abs(Zpos - 10f)/20f;
-
-            float Xpos = Random.Range(mapRangeX.x,mapRangeX.y);
+            float Xpos = Random.Range(mapRangeX.x - 7f,mapRangeX.y + 7f);
+            float Zpos = Random.Range(mapRangeZ.x,mapRangeZ.y);
+            float Ypos = Mathf.Abs(Xpos - 108f)/20f;
 
             //bool to state is selected pos is colliding with a decal
             bool hitObstacle = false;

@@ -69,11 +69,15 @@ public class DiceBoxController : MonoBehaviour
 
             GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position ,Quaternion.identity);
             Dice.GetComponent<DiceRoll>().diceTemplate = diceTemp;
-            Dice.transform.localScale /= 4f;
+            Dice.transform.localScale /= 1.5f;
             Dice.GetComponent<Rigidbody>().isKinematic = true;
             Dice.transform.rotation = new Quaternion(0,0,0,0);
             Dice.transform.SetParent(spawn);
-            StartCoroutine(liftDice(Dice));
+            foreach(Transform col in transform){
+                if(col.CompareTag("DiceBoxSpawn")){
+                    col.gameObject.GetComponent<DiceBoxHover>().animFin = true;
+                }
+            }
         }
         StartCoroutine(diceView());
     }
@@ -108,19 +112,6 @@ public class DiceBoxController : MonoBehaviour
         
     }
 
-    private IEnumerator liftDice(GameObject dice){
-        yield return new WaitForSeconds(3f);
-        Vector3 startPos = dice.transform.position;
-        while(Vector3.Distance(dice.transform.position, startPos + new Vector3(0,3,0)) > 0.1f){
-            dice.transform.position = Vector3.Lerp(dice.transform.position, startPos + new Vector3(0,3,0), 5f * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
-        }
-        foreach(Transform col in transform){
-            if(col.CompareTag("DiceBoxSpawn")){
-                col.gameObject.GetComponent<DiceBoxHover>().animFin = true;
-            }
-        }
-    }
 }
 
 
