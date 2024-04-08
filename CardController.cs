@@ -4,6 +4,9 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
+
+
+
 public class CardController : MonoBehaviour
 {
     public CardTemplate cardTemplate;
@@ -14,6 +17,7 @@ public class CardController : MonoBehaviour
     public int AdditionValue;
     public int cardSpeed;
     public bool CardTriggered;
+    public CardType cardType;
 
     public Vector3 basePos;
     private Quaternion baseRot;
@@ -58,6 +62,8 @@ public class CardController : MonoBehaviour
         img.sprite = cardTemplate.imgOverlay;
         effectImage.sprite = cardTemplate.effectOverlay;
         sellText.text = $"${cardTemplate.baseSellValue}";
+        SellValue = cardTemplate.baseSellValue;
+        cardType = cardTemplate.cardType;
         gameObject.GetComponent<MeshRenderer>().material.SetTexture("_EffectTex",cardTemplate.effectAlpha);
     }
 

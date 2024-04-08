@@ -174,11 +174,11 @@ public class Score : MonoBehaviour
 
             CardController controller = card.GetComponent<CardController>();
 
-            string CardName = controller.cardTemplate.name;
+            CardType cardType = controller.cardTemplate.cardType;
 
             //switches through the card name
-            switch(CardName){
-                case "The Jinx":
+            switch(cardType){
+                case (CardType.Jinx):
 
                     //checks the dice results list for any duplicates
                     var JinxResults = diceResults.GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
@@ -194,7 +194,7 @@ public class Score : MonoBehaviour
                     }
                 break;
 
-                case "FizzBuzz":
+                case (CardType.FizzBuzz):
                     //does what it says really, just fizzbuzz-core
 
                     int[] FizzBuzzNums = new int[] {15,3,5};
@@ -209,29 +209,23 @@ public class Score : MonoBehaviour
 
                 break;
 
-                case "High Roller":
-                    //checks if dice rolled highest face value, if it did accumulate value on cards multi
+                case (CardType.HighRoller):
+                    //checks if dice rolled highest face value, if it did accumulate +1 on cards multi
 
-                    bool highestMatched = false;
                     foreach(GameObject dice in diceRoller.DiceHeld){
                         int num;
                         if (int.TryParse(dice.GetComponent<DiceRoll>().faceName, out num)){
                             if(num == dice.GetComponent<DiceRoll>().diceTemplate.hiVal){
                                 controller.Multiplier += 1;
-                                highestMatched = true;
                                 controller.CardTriggered = true;
                             }
                         }
                         
                     } 
-                    //if didnt roll highest value, halves the multi.
-                    if(!highestMatched){
-                        controller.Multiplier = Mathf.RoundToInt(controller.Multiplier / 2);
-                    }
                     
                 break;
-                case "Rich Rolled":
-                    //similar to above but with the lowest values, and adds to sell value instead, Basically an investment card
+                case (CardType.RollingRich):
+                    //similar to above but with the lowest values, and adds +1 to sell value instead, Basically an investment card 
                     foreach(GameObject dice in diceRoller.DiceHeld){
                         int num;
                         if (int.TryParse(dice.GetComponent<DiceRoll>().faceName, out num)){
@@ -242,6 +236,10 @@ public class Score : MonoBehaviour
                         }
                         
                     }
+                break;
+                case (CardType.CloseCall):
+                    //saves player from death
+                    
                 break;
             }
         } 
@@ -298,7 +296,7 @@ public class Score : MonoBehaviour
             currentMultiplier = 1;
         }
         
-        //edits text, doesnt need the medieval contraption above as this is always containing some value
+        //edits text, doesnt need the medieval contraption above as this is always containing some value || (future me: - honestly confused myself with this one)
         scoreText.text = (int.Parse(Regex.Match(scoreText.text, @"\d+").Value) * currentMultiplier).ToString();
         multiText.text = "";
 

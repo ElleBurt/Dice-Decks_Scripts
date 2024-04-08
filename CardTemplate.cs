@@ -15,9 +15,19 @@ public enum CardClass{
     Upgrade,
 }
 
+public enum CardType{
+    CloseCall,
+    HighRoller,
+    RollingRich,
+    Jinx,
+    FizzBuzz,
+
+}
+
 [CreateAssetMenu(fileName = "CardTemplate", menuName = "Card", order = 0)]
 public class CardTemplate : ScriptableObject {
     public new string name;
+    public CardType cardType;
 
     [TextAreaAttribute]
     public string description;

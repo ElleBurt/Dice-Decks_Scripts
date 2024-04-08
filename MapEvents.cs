@@ -121,7 +121,6 @@ public class MapEvents : MonoBehaviour {
             SelectMiniToAttack(newEnemy.transform.GetChild(0).gameObject);
         }      
         else{
-            Debug.Log("newEnemy to attack");
             SelectMiniToAttack(newEnemy);
         }
     }

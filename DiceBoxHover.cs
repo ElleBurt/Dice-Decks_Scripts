@@ -24,7 +24,7 @@ public class DiceBoxHover : MonoBehaviour
             hovered = true;
 
             if(openDesc == null){
-                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5,0)),Quaternion.Euler(Vector3.zero));
+                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5.5f,0)),Quaternion.Euler(Vector3.zero));
                 GameObject dice = transform.GetChild(0).gameObject;
                 DiceTemplate dt = dice.GetComponent<DiceRoll>().diceTemplate;
                 Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";

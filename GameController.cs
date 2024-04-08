@@ -76,11 +76,22 @@ public class GameController : MonoBehaviour
         
     }
 
+    float cameraZmin = 6;
+    float cameraZmax = 45;
     //temp key press to start game
     void Update()
     {
         if(Input.GetKeyDown(KeyCode.K)){
             GameStarted();
+        }
+        if(cameraAlignedToMap){
+            Vector3 pos = mainCamera.transform.position;
+            pos.z += Input.mouseScrollDelta.y;
+
+
+            if(pos.z > cameraZmin && pos.z < cameraZmax){
+                mainCamera.transform.position = pos;
+            }
         }
     }
 
@@ -97,8 +108,8 @@ public class GameController : MonoBehaviour
         //ternary opperator for knowing if to add or subtract health
         float NewHealth = Damaged ? CurrentHealth -= ChangeFactor : CurrentHealth += ChangeFactor;
 
-        float MinVileValue = 5;
-        float MaxVileValue = -4;
+        float MinVileValue = 4.89f;
+        float MaxVileValue = -3.8f;
         float HealthPercentile = NewHealth / MaxHealth;
         
 
@@ -165,7 +176,7 @@ public class GameController : MonoBehaviour
     }
 
     public IEnumerator IconRoutine(string iconName){
-
+        diceRoller.canRoll = false;
         switch(iconName){
             case "Encounter":
                 StartCoroutine(mapEvents.SpawnEnemy(currentRound));
@@ -250,9 +261,9 @@ public class GameController : MonoBehaviour
     public IEnumerator MapViewAnim(){
         cameraAlignedToDice = false;
         yield return new WaitForSeconds(2f);
-        while(Vector3.Distance(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,10,-5)) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,10,-5), cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(46.2f,0f,0f), cameraMoveSpeed * Time.deltaTime);
+        while(Vector3.Distance(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,13,-5)) > 0.1f){
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,13,-5), cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(48f,0f,0f), cameraMoveSpeed * Time.deltaTime);
             yield return new WaitForSeconds(0.01f);
         }
         StartCoroutine(DropPlayerToken());
