@@ -33,6 +33,7 @@ public class CardController : MonoBehaviour
     public TMP_Text sellText;
     private Image img; 
     private Image effectImage;
+    private Material effectAlpha;
 
     private bool isMoving = false;
     private bool atTop = false;
@@ -52,19 +53,21 @@ public class CardController : MonoBehaviour
         sellText = transform.GetChild(0).Find("Sell").GetComponent<TMP_Text>();
         img = transform.GetChild(0).Find("Image").GetComponent<Image>();
         effectImage = transform.GetChild(0).Find("Effect").GetComponent<Image>();
+        effectAlpha = gameObject.GetComponent<MeshRenderer>().material;
     }
 
    
 
     public void SetupCard(){
-        nameText.text = cardTemplate.name;
+        
         descriptionText.text = cardTemplate.description;
         img.sprite = cardTemplate.imgOverlay;
-        effectImage.sprite = cardTemplate.effectOverlay;
+        effectImage.sprite = Resources.Load<Sprite>($"cards/Sprites/{cardTemplate.cardClass}");
         sellText.text = $"${cardTemplate.baseSellValue}";
         SellValue = cardTemplate.baseSellValue;
         cardType = cardTemplate.cardType;
-        gameObject.GetComponent<MeshRenderer>().material.SetTexture("_EffectTex",cardTemplate.effectAlpha);
+        nameText.text = cardType.ToString();
+        effectAlpha.SetTexture("_EffectTex",Resources.Load<Texture2D>($"cards/Alphas/{cardTemplate.cardClass}"));
     }
 
     //move card up or down on hover or exit also tilt depending on mouse distance from center of card
@@ -157,7 +160,7 @@ public class CardController : MonoBehaviour
             transform.position = Vector3.Lerp(transform.position, basePos + offsetPos, cardSpeed * Time.deltaTime);
             isMoving = true;
         }
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(1f);
         while (Vector3.Distance(transform.position,basePos) > 0.01f){
             transform.position = Vector3.Lerp(transform.position, basePos, cardSpeed * Time.deltaTime);
             isMoving = true;

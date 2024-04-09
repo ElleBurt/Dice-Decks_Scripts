@@ -24,7 +24,6 @@ public class GameController : MonoBehaviour
 
     [Header("Event")]
     public List<MapEventTemplate> Events = new List<MapEventTemplate>();
-    //testing git repository
 
     [Header("Cards")]
     public List<CardTemplate> CardTemplates = new List<CardTemplate>();

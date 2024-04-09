@@ -10,8 +10,7 @@ public enum CardClass{
     Cursed,
     Celestial,
     BloodShard,
-    BigShield,
-    SmallShield,
+    Shield,
     Upgrade,
 }
 
@@ -21,7 +20,13 @@ public enum CardType{
     RollingRich,
     Jinx,
     FizzBuzz,
-
+    CorruptCoins,
+    DefenceForce,
+    PlagueDoctor,
+    Economics,
+    EldritchRage,
+    MilitaryInvestment,
+    StrengthRitual,
 }
 
 [CreateAssetMenu(fileName = "CardTemplate", menuName = "Card", order = 0)]
@@ -37,8 +42,6 @@ public class CardTemplate : ScriptableObject {
     public bool shouldReset;
 
     public Sprite imgOverlay;
-    public Sprite effectOverlay;
-    public Texture2D effectAlpha;
 
     public CardClass cardClass;
     public int baseSellValue;

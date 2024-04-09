@@ -15,6 +15,7 @@ public class CardHolder : MonoBehaviour
     private Vector3 spawnPoint;
     public TMP_Text CardCount;
     public int maxCards;
+    public float cardWidth;
 
     public GameObject CardPrefab;
 
@@ -49,7 +50,7 @@ public class CardHolder : MonoBehaviour
         int cardNum = 0;
         foreach(GameObject card in CardsHeld){
 
-            Vector3 newPos = new Vector3(spawnPoint.x + (cardNum * card.GetComponent<CardController>().cardTemplate.width), spawnPoint.y, spawnPoint.z);
+            Vector3 newPos = new Vector3(spawnPoint.x + (cardNum * cardWidth), spawnPoint.y, spawnPoint.z);
             card.transform.position = newPos;
             card.transform.rotation = Quaternion.Euler(-15,-185,0);
             card.GetComponent<CardController>().basePos = card.transform.position;

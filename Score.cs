@@ -16,6 +16,7 @@ public class Score : MonoBehaviour
     CardHolder cardHolder;
     GameController gameController;
     ScoreDice scoreDice;
+    ScoreCards scoreCards;
 
     MapEvents mapEvents;
 
@@ -64,6 +65,7 @@ public class Score : MonoBehaviour
         gameController = FindObjectOfType<GameController>();
         mapEvents = FindObjectOfType<MapEvents>();
         scoreDice = FindObjectOfType<ScoreDice>();
+        scoreCards = FindObjectOfType<ScoreCards>();
     }   
 
   
@@ -153,7 +155,7 @@ public class Score : MonoBehaviour
                 yield return new WaitForSeconds(0.3f);
             }
         }else{
-            StartCoroutine(ScoreCards());
+            scoreCards.ProcessCards(diceResults);
             hasRerolled = false;
             shouldReroll = false;
         }
@@ -161,157 +163,10 @@ public class Score : MonoBehaviour
     }
 
 
-    //scores cards based on their struct
-    IEnumerator ScoreCards(){
-
-        //default placeholders
-        int currentMultiplier;
-        int newMultiplier = 0;
-        int scoreAddition = 0;
-
-        //loops through cards in possession 
-        foreach(GameObject card in cardHolder.CardsHeld){
-
-            CardController controller = card.GetComponent<CardController>();
-
-            CardType cardType = controller.cardTemplate.cardType;
-
-            //switches through the card name
-            switch(cardType){
-                case (CardType.Jinx):
-
-                    //checks the dice results list for any duplicates
-                    var JinxResults = diceResults.GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-
-                    //if dupes then add equal value to the score 
-                    if(JinxResults.Count > 0){
-                        int score = int.Parse(scoreText.text);
-
-                        foreach(var Jinx in JinxResults){
-                            controller.AdditionValue += Jinx;
-                        }
-                        controller.CardTriggered = true;
-                    }
-                break;
-
-                case (CardType.FizzBuzz):
-                    //does what it says really, just fizzbuzz-core
-
-                    int[] FizzBuzzNums = new int[] {15,3,5};
-                    
-                    if (FizzBuzzNums.Contains(FizzBuzz(int.Parse(scoreText.text)))){
-                        int MultiToAdd = FizzBuzz(int.Parse(scoreText.text));
-                        controller.Multiplier += MultiToAdd;
-                        controller.CardTriggered = true;
-                    }
-
-
-
-                break;
-
-                case (CardType.HighRoller):
-                    //checks if dice rolled highest face value, if it did accumulate +1 on cards multi
-
-                    foreach(GameObject dice in diceRoller.DiceHeld){
-                        int num;
-                        if (int.TryParse(dice.GetComponent<DiceRoll>().faceName, out num)){
-                            if(num == dice.GetComponent<DiceRoll>().diceTemplate.hiVal){
-                                controller.Multiplier += 1;
-                                controller.CardTriggered = true;
-                            }
-                        }
-                        
-                    } 
-                    
-                break;
-                case (CardType.RollingRich):
-                    //similar to above but with the lowest values, and adds +1 to sell value instead, Basically an investment card 
-                    foreach(GameObject dice in diceRoller.DiceHeld){
-                        int num;
-                        if (int.TryParse(dice.GetComponent<DiceRoll>().faceName, out num)){
-                            if(num == dice.GetComponent<DiceRoll>().diceTemplate.loVal){
-                                controller.SellValue += 1;
-                                controller.CardTriggered = true;
-                            }
-                        }
-                        
-                    }
-                break;
-                case (CardType.CloseCall):
-                    //saves player from death
-                    
-                break;
-            }
-        } 
-
-        //once all effects are applied to the cards values, process them
-        foreach(GameObject card in cardHolder.CardsHeld){
-
-            //script on card
-            CardController controller = card.GetComponent<CardController>();
-
-            newMultiplier += controller.Multiplier;
-            scoreAddition += controller.AdditionValue;
-
-            controller.additionText.text = "+" + (controller.AdditionValue).ToString();
-            controller.multiText.text = "x" + (controller.Multiplier).ToString();
-            controller.sellText.text = "$" + (controller.SellValue).ToString();
-
-            if(newMultiplier > 0){
-                UpdateMulti(newMultiplier);
-            }
-
-            scoreText.text = (int.Parse(scoreText.text) + scoreAddition).ToString();
-            
-
-            if(controller.CardTriggered){
-                //moves card up when scoring
-                StartCoroutine(controller.ScoreCard());
-
-                yield return new WaitForSeconds(0.3f);
-            }
-            
-            controller.CardTriggered = false;
-
-
-            //if card isnt meant to retain values then clear them
-            if(controller.cardTemplate.shouldReset){
-                controller.Multiplier = 0;
-                controller.AdditionValue = 0;
-            }
-
-            controller.additionText.text = "+" + (controller.AdditionValue).ToString();
-            controller.multiText.text = "x" + (controller.Multiplier).ToString();
-            controller.sellText.text = "$" + (controller.SellValue).ToString();
-        }
-
-        yield return new WaitForSeconds(0.2f);
-
-        //check if multi on card has already been edited if not then set it to this value or add it on to the existing one
-        if(Regex.Match(multiText.text, @"\d+").Success){
-
-            currentMultiplier = int.Parse(Regex.Match(multiText.text, @"\d+").Value);
-
-        }else{
-            currentMultiplier = 1;
-        }
-        
-        //edits text, doesnt need the medieval contraption above as this is always containing some value || (future me: - honestly confused myself with this one)
-        scoreText.text = (int.Parse(Regex.Match(scoreText.text, @"\d+").Value) * currentMultiplier).ToString();
-        multiText.text = "";
-
-        //returns dice to the tray
-        StartCoroutine(ReturnDice());
-
-        //stop scoring dice
-        ScoringDice = false;
-
-        //dissolves card
-        StartCoroutine(DissolveCard());
-    }
+    
 
     //moves dice to respective positions in the dice holder
-    IEnumerator ReturnDice(){
+    public IEnumerator ReturnDice(){
         foreach(GameObject dice in diceRoller.DiceHeld){
 
             string slot = dice.transform.parent.name;
@@ -331,7 +186,7 @@ public class Score : MonoBehaviour
     }
 
     //fades text elements, adjusts step value on the disolve shader and spawns the weapon
-    IEnumerator DissolveCard(){
+    public IEnumerator DissolveCard(){
         float StartValue = 0f;
         float EndValue = 1f;
         float TimeValue = 1f;
