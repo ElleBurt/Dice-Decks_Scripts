@@ -61,6 +61,8 @@ public class GameController : MonoBehaviour
     public int MoneyHeld = 0;
     public int TickDamage = 0;
 
+    public List<int> diceResults = new List<int>();
+
 
     
     void Start()

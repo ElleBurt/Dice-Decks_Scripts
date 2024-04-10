@@ -42,6 +42,11 @@ public class CardController : MonoBehaviour
 
     public bool canPickup = false;
     public bool boosterCard = false;
+
+
+    //card Vals
+    private int EldritchRageBonus, DefenceForceBonus, PlagueDoctorBonus, MilitaryInvestmentBonus, EconomicsBonus;
+    
     
 
 
@@ -58,6 +63,39 @@ public class CardController : MonoBehaviour
         cardMat = gameObject.GetComponent<MeshRenderer>().material;
 
         gameController = FindObjectOfType<GameController>();
+
+    }
+
+    private void FixedUpdate() {
+        EldritchRageBonus = gameController.diceResults.Count * 3;
+        DefenceForceBonus = gameController.HitsTaken;
+        MilitaryInvestmentBonus = gameController.EnemiesKilled * 3;
+        PlagueDoctorBonus = Mathf.FloorToInt(gameController.MoneyHeld / 3);
+        EconomicsBonus = Mathf.FloorToInt(gameController.MoneyHeld / 4);
+
+        switch(cardTemplate.cardType){
+            case CardType.EldritchRage:
+                additionText.text = $"+{EldritchRageBonus}";
+            break;
+
+            case CardType.DefenceForce:
+                additionText.text  = $"+{DefenceForceBonus}";
+            break;
+
+            case CardType.MilitaryInvestment:
+                additionText.text  = $"+{MilitaryInvestmentBonus}";
+            break;
+
+            case CardType.PlagueDoctor:
+            break;
+
+            case CardType.Economics:
+                sellText.text = $"${cardTemplate.baseSellValue + EconomicsBonus}";
+            break;
+
+            default:
+            break;
+        }
 
     }
 

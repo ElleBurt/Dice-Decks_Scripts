@@ -66,7 +66,7 @@ public class ScoreDice : MonoBehaviour
     }
 
     private void Basic(string value){
-        scoreScript.diceResults.Add(int.Parse(value));
+        gameController.diceResults.Add(int.Parse(value));
         //sets the scoreText to the new score
         scoreScript.score += int.Parse(value);
         scoreScript.scoreText.text = scoreScript.score.ToString();

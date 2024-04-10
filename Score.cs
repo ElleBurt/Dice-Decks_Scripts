@@ -52,7 +52,7 @@ public class Score : MonoBehaviour
 
 
     //list of the results this round
-    public List<int> diceResults = new List<int>();
+    
     public bool shouldReroll = false;
     private bool hasRerolled = false;
 
@@ -113,7 +113,7 @@ public class Score : MonoBehaviour
     
     //gets the active cards text elements and edits them accordingly    
     IEnumerator ScoreFaces(){
-        diceResults.Clear();
+        gameController.diceResults.Clear();
         pitch = 0.9f;
 
         if(!hasRerolled){
@@ -155,7 +155,7 @@ public class Score : MonoBehaviour
                 yield return new WaitForSeconds(0.3f);
             }
         }else{
-            scoreCards.ProcessCards(diceResults);
+            scoreCards.ProcessCards(gameController.diceResults);
             hasRerolled = false;
             shouldReroll = false;
         }

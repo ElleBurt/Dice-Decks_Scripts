@@ -34,15 +34,12 @@ public class ScoreCards : MonoBehaviour
     public ScoreCards()
     {
         Processes = new Dictionary<CardType, Action<CardController,GameObject>>{
-            {CardType.CloseCall, CloseCall},
             {CardType.HighRoller, HighRoller},
             {CardType.RollingRich, RollingRich},
             {CardType.Jinx, Jinx},
             {CardType.FizzBuzz, FizzBuzz},
-            {CardType.CorruptCoins, CorruptCoins},
             {CardType.DefenceForce, DefenceForce},
             //{CardType.PlagueDoctor, PlagueDoctor},
-            {CardType.Economics, Economics},
             {CardType.MilitaryInvestment, MilitaryInvestment},
             {CardType.EldritchRage, EldritchRage},
             //{CardType.StrengthRitual, StrengthRitual},
@@ -51,6 +48,7 @@ public class ScoreCards : MonoBehaviour
         ignoreCardTypes = new List<CardType>{
             {CardType.CorruptCoins},
             {CardType.CloseCall},
+            {CardType.Economics},
             
         };
 
@@ -165,11 +163,6 @@ public class ScoreCards : MonoBehaviour
                 controller.AdditionValue += Jinx;
             }
         }
-    }
-
-    private void Economics(CardController controller, GameObject card){
-        int addSellVal = Mathf.FloorToInt(gameController.MoneyHeld % 4);
-        controller.SellValue = controller.cardTemplate.baseSellValue + addSellVal;
     }
 
     private void EldritchRage(CardController controller, GameObject card){
