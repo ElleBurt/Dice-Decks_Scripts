@@ -12,6 +12,7 @@ public class ScoreDice : MonoBehaviour
     DiceRoller diceRoller;
     Score scoreScript;
     MapEvents events;
+    GameController gameController;
 
     private Dictionary<DiceType, Action<string>> Processes;
     private MiniScript SelectedEncounter;
@@ -20,6 +21,7 @@ public class ScoreDice : MonoBehaviour
         diceRoller = FindObjectOfType<DiceRoller>();
         scoreScript = FindObjectOfType<Score>();
         events = FindObjectOfType<MapEvents>();
+        gameController = FindObjectOfType<GameController>();
        
     }
 

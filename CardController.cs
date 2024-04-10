@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 public class CardController : MonoBehaviour
 {
+    public GameController gameController;
     public CardTemplate cardTemplate;
 
     [Header("Card Values")]
@@ -18,10 +19,11 @@ public class CardController : MonoBehaviour
     public int cardSpeed;
     public bool CardTriggered;
     public CardType cardType;
+    public int BloodShardCount = 0;
 
     public Vector3 basePos;
     private Quaternion baseRot;
-    private Vector3 offsetPos = new Vector3(0f, 3f, -1f);
+    private Vector3 offsetPos = new Vector3(0f, 1.5f, -1f);
 
     private bool entered = false;
 
@@ -33,7 +35,7 @@ public class CardController : MonoBehaviour
     public TMP_Text sellText;
     private Image img; 
     private Image effectImage;
-    private Material effectAlpha;
+    private Material cardMat;
 
     private bool isMoving = false;
     private bool atTop = false;
@@ -53,7 +55,10 @@ public class CardController : MonoBehaviour
         sellText = transform.GetChild(0).Find("Sell").GetComponent<TMP_Text>();
         img = transform.GetChild(0).Find("Image").GetComponent<Image>();
         effectImage = transform.GetChild(0).Find("Effect").GetComponent<Image>();
-        effectAlpha = gameObject.GetComponent<MeshRenderer>().material;
+        cardMat = gameObject.GetComponent<MeshRenderer>().material;
+
+        gameController = FindObjectOfType<GameController>();
+
     }
 
    
@@ -67,7 +72,21 @@ public class CardController : MonoBehaviour
         SellValue = cardTemplate.baseSellValue;
         cardType = cardTemplate.cardType;
         nameText.text = cardType.ToString();
-        effectAlpha.SetTexture("_EffectTex",Resources.Load<Texture2D>($"cards/Alphas/{cardTemplate.cardClass}"));
+        cardMat.SetTexture("_EffectTex",Resources.Load<Texture2D>($"cards/Alphas/{cardTemplate.cardClass}"));
+
+
+        if(cardTemplate.cardClass == CardClass.BloodShard){
+            BloodShardCount = 5;
+            cardMat.SetFloat("_isCursed",1f);
+        }
+
+        if(cardTemplate.cardClass == CardClass.Cursed){
+            cardMat.SetFloat("_isCursed",1f);
+        }
+
+        if(cardTemplate.cardClass == CardClass.Blessed){
+            cardMat.SetFloat("_isBlessed",1f);
+        }
     }
 
     //move card up or down on hover or exit also tilt depending on mouse distance from center of card
@@ -166,5 +185,9 @@ public class CardController : MonoBehaviour
             isMoving = true;
         }
         isMoving = false;
+    }
+
+    public void cardDestroyed(){
+        Destroy(gameObject,1);
     }
 }

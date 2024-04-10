@@ -52,6 +52,16 @@ public class GameController : MonoBehaviour
     private GameObject Scroll;
     private delegate bool Comparison(float CurrentHealthVolume, float NewHealthVolume);
 
+
+
+    [Header("Stats")]
+    public int HitsTaken = 0;
+    public int DamageTaken = 0;
+    public int EnemiesKilled = 0;
+    public int MoneyHeld = 0;
+    public int TickDamage = 0;
+
+
     
     void Start()
     {

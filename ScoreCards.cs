@@ -13,32 +13,58 @@ public class ScoreCards : MonoBehaviour
     CardHolder cardHolder;
     Score score;
     DiceRoller diceRoller;
+    GameController gameController;
     
     private List<int> diceFaceValues = new List<int>();
     private Dictionary<CardType, Action<CardController,GameObject>> Processes;
+    private Dictionary<CardClass, Action<CardController,GameObject>> EffectProcesses;
+    private List<CardType> ignoreCardTypes = new List<CardType>();
+    private List<CardClass> ignoreCardClass = new List<CardClass>();
     private TMP_Text scoreText, multiText;
+    private int currentEnemiesKilled = 0;
+    private int currentHitsTaken = 0;
 
     void Start(){
         cardHolder = FindObjectOfType<CardHolder>();
         score = FindObjectOfType<Score>();
         diceRoller = FindObjectOfType<DiceRoller>();
+        gameController = FindObjectOfType<GameController>();
     }  
 
     public ScoreCards()
     {
         Processes = new Dictionary<CardType, Action<CardController,GameObject>>{
-            //{CardType.CloseCall, CloseCall},
+            {CardType.CloseCall, CloseCall},
             {CardType.HighRoller, HighRoller},
             {CardType.RollingRich, RollingRich},
             {CardType.Jinx, Jinx},
             {CardType.FizzBuzz, FizzBuzz},
-            //{CardType.CorruptCoins, CorruptCoins},
-            //{CardType.DefenceForce, DefenceForce},
+            {CardType.CorruptCoins, CorruptCoins},
+            {CardType.DefenceForce, DefenceForce},
             //{CardType.PlagueDoctor, PlagueDoctor},
-            //{CardType.Economics, Economics},
-            //{CardType.EldritchRage, EldritchRage},
-            //{CardType.MilitaryInvestment, MilitaryInvestment},
+            {CardType.Economics, Economics},
+            {CardType.MilitaryInvestment, MilitaryInvestment},
+            {CardType.EldritchRage, EldritchRage},
             //{CardType.StrengthRitual, StrengthRitual},
+        };
+
+        ignoreCardTypes = new List<CardType>{
+            {CardType.CorruptCoins},
+            {CardType.CloseCall},
+            
+        };
+
+        EffectProcesses = new Dictionary<CardClass, Action<CardController,GameObject>>{
+            {CardClass.Blessed, Blessed},
+            {CardClass.Cursed, Cursed},
+            {CardClass.Celestial, Celestial},
+            {CardClass.BloodShard, BloodShard},
+            {CardClass.Shield, Shield},
+            {CardClass.Upgrade, Upgrade},
+        };
+
+        ignoreCardClass = new List<CardClass>{
+            {CardClass.Standard},
         };
     }
 
@@ -54,10 +80,33 @@ public class ScoreCards : MonoBehaviour
 
             CardController controller = card.GetComponent<CardController>();
             CardType cardType = controller.cardType;
+            CardClass cardClass = controller.cardTemplate.cardClass;
 
-            Processes[cardType](controller,card);
+
+            if(!ignoreCardTypes.Contains(cardType)){
+                Processes[cardType](controller,card);
+            }
+            
+            if(!ignoreCardClass.Contains(cardClass)){
+                EffectProcesses[cardClass](controller,card);
+            }
+            StartCoroutine(CardTriggered(card));
         }
-        StartCoroutine(ScoreAllCards());
+        //check if multi on card has already been edited if not then set it to this value or add it on to the existing one
+        int currentMultiplier = Regex.Match(multiText.text, @"\d+").Success ? int.Parse(Regex.Match(multiText.text, @"\d+").Value) : 1;
+
+        //edits text, doesnt need the medieval contraption above as this is always containing some value || (future me: - honestly confused myself with this one)
+        scoreText.text = (int.Parse(Regex.Match(scoreText.text, @"\d+").Value) * currentMultiplier).ToString();
+        multiText.text = "";
+
+        //returns dice to the tray
+        StartCoroutine(score.ReturnDice());
+
+        //stop scoring dice
+        score.ScoringDice = false;
+
+        //dissolves card
+        StartCoroutine(score.DissolveCard());
     }
 
     private void HighRoller(CardController controller, GameObject card){
@@ -68,7 +117,6 @@ public class ScoreCards : MonoBehaviour
             if (int.TryParse(dice.GetComponent<DiceRoll>().faceName, out num)){
                 if(num == dice.GetComponent<DiceRoll>().diceTemplate.hiVal){
                     controller.AdditionValue += 1;
-                    
                 }
             }
             
@@ -81,7 +129,6 @@ public class ScoreCards : MonoBehaviour
         if (FizzBuzzNums.Contains(FizzBuzz(int.Parse(scoreText.text)))){
             int MultiToAdd = FizzBuzz(int.Parse(scoreText.text));
             controller.Multiplier += MultiToAdd;
-            controller.CardTriggered = true;
         }
     }
     private int FizzBuzz(int num){
@@ -100,7 +147,6 @@ public class ScoreCards : MonoBehaviour
             if (int.TryParse(dice.GetComponent<DiceRoll>().faceName, out num)){
                 if(num == dice.GetComponent<DiceRoll>().diceTemplate.loVal){
                     controller.SellValue += 1;
-                    controller.CardTriggered = true;
                 }
             }
             
@@ -118,76 +164,151 @@ public class ScoreCards : MonoBehaviour
             foreach(var Jinx in JinxResults){
                 controller.AdditionValue += Jinx;
             }
-            controller.CardTriggered = true;
         }
     }
 
+    private void Economics(CardController controller, GameObject card){
+        int addSellVal = Mathf.FloorToInt(gameController.MoneyHeld % 4);
+        controller.SellValue = controller.cardTemplate.baseSellValue + addSellVal;
+    }
 
-    IEnumerator ScoreAllCards(){
-        //default placeholders
-        int currentMultiplier;
+    private void EldritchRage(CardController controller, GameObject card){
+        controller.AdditionValue = 4 * diceFaceValues.Count;
+    }
+
+
+    //-----These Are Triggered Or Updated By External Actions-----
+
+    public void MilitaryInvestment(CardController controller, GameObject card){
+        
+        controller.AdditionValue = currentEnemiesKilled + gameController.EnemiesKilled;
+        
+        if(currentEnemiesKilled < gameController.EnemiesKilled){
+            StartCoroutine(controller.ScoreCard());
+            currentEnemiesKilled++;
+        }
+    }
+
+    public void DefenceForce(CardController controller, GameObject card){
+
+        controller.AdditionValue = gameController.HitsTaken;
+
+        if(currentHitsTaken < gameController.HitsTaken){
+            StartCoroutine(controller.ScoreCard());
+            currentHitsTaken++;
+        }
+    }
+
+    public void CorruptCoins(CardController controller, GameObject card){
+        
+        int outcome = UnityEngine.Random.Range(1,4) == 3 ? 2 : 1;
+        gameController.MoneyHeld += outcome;
+        StartCoroutine(controller.ScoreCard());
+    }
+
+    public void CloseCall(CardController controller, GameObject card){
+        
+        StartCoroutine(CardTriggered(card));
+    }
+
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+    private void Blessed(CardController controller, GameObject card){
+        gameController.UpdateHealth(1,false);
+    }
+
+    private void Cursed(CardController controller, GameObject card){
+        gameController.UpdateHealth(1,true);
+    }
+
+    private void Celestial(CardController controller, GameObject card){
+        if(UnityEngine.Random.Range(1,3) == 1){
+            controller.AdditionValue += 1;
+        }else{
+            controller.Multiplier += 1;
+        }
+    }
+
+    private void BloodShard(CardController controller, GameObject card){
+        controller.BloodShardCount -= 1;
+
+        if(controller.BloodShardCount == 0){
+            controller.cardDestroyed();
+        }
+    }
+
+    private void Shield(CardController controller, GameObject card){
+        
+    }
+
+    private void Upgrade(CardController controller, GameObject card){
+        
+    }
+
+
+
+
+
+
+
+
+
+
+
+    IEnumerator CardTriggered(GameObject card){
         int newMultiplier = 0;
         int scoreAddition = 0;
 
-        //once all effects are applied to the cards values, process them
-        foreach(GameObject card in cardHolder.CardsHeld){
+        //script on card
+        CardController controller = card.GetComponent<CardController>();
 
-            //script on card
-            CardController controller = card.GetComponent<CardController>();
+        newMultiplier += controller.Multiplier;
+        scoreAddition += controller.AdditionValue;
 
-            newMultiplier += controller.Multiplier;
-            scoreAddition += controller.AdditionValue;
+        controller.additionText.text = "+" + (controller.AdditionValue).ToString();
+        controller.multiText.text = "x" + (controller.Multiplier).ToString();
+        controller.sellText.text = "$" + (controller.SellValue).ToString();
 
-            controller.additionText.text = "+" + (controller.AdditionValue).ToString();
-            controller.multiText.text = "x" + (controller.Multiplier).ToString();
-            controller.sellText.text = "$" + (controller.SellValue).ToString();
-
-            if(newMultiplier > 0){
-                score.UpdateMulti(newMultiplier);
-            }
-
-            scoreText.text = (int.Parse(scoreText.text) + scoreAddition).ToString();
-            
-
-            if(controller.CardTriggered){
-                //moves card up when scoring
-                StartCoroutine(controller.ScoreCard());
-            }
-            
-            controller.CardTriggered = false;
-
-
-            //if card isnt meant to retain values then clear them
-            if(controller.cardTemplate.shouldReset){
-                controller.Multiplier = 0;
-                controller.AdditionValue = 0;
-            }
-
-            controller.additionText.text = "+" + (controller.AdditionValue).ToString();
-            controller.multiText.text = "x" + (controller.Multiplier).ToString();
-            controller.sellText.text = "$" + (controller.SellValue).ToString();
-
-            yield return new WaitForSeconds(1f);
+        if(newMultiplier > 0){
+            score.UpdateMulti(newMultiplier);
         }
 
+        scoreText.text = (int.Parse(scoreText.text) + scoreAddition).ToString();
+
+        if(newMultiplier > 0 || scoreAddition > 0){
+            StartCoroutine(controller.ScoreCard());
+        }
         
 
-        //check if multi on card has already been edited if not then set it to this value or add it on to the existing one
-        currentMultiplier = Regex.Match(multiText.text, @"\d+").Success ? int.Parse(Regex.Match(multiText.text, @"\d+").Value) : 1;
-        
-        //edits text, doesnt need the medieval contraption above as this is always containing some value || (future me: - honestly confused myself with this one)
-        scoreText.text = (int.Parse(Regex.Match(scoreText.text, @"\d+").Value) * currentMultiplier).ToString();
-        multiText.text = "";
 
-        //returns dice to the tray
-        StartCoroutine(score.ReturnDice());
+        //if card isnt meant to retain values then clear them
+        if(controller.cardTemplate.shouldReset){
+            controller.Multiplier = 0;
+            controller.AdditionValue = 0;
+        }
 
-        //stop scoring dice
-        score.ScoringDice = false;
+        controller.additionText.text = "+" + (controller.AdditionValue).ToString();
+        controller.multiText.text = "x" + (controller.Multiplier).ToString();
+        controller.sellText.text = "$" + (controller.SellValue).ToString();
 
-        //dissolves card
-        StartCoroutine(score.DissolveCard());
+        yield return new WaitForSeconds(1f);
     }
+
+    
+
+    
+
 
 
 }

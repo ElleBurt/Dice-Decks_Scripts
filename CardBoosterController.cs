@@ -46,9 +46,7 @@ public class CardBoosterController : MonoBehaviour
 
     public IEnumerator OpenSequence(){
         StartCoroutine(diceView());
-        for(float i = 1f; i < 4f; i++){
-            AddCard(i/15f);
-        }
+        AddCards();
         yield return new WaitForSeconds(2);
 
         Vector3 moveTo = cardSelectionPos - new Vector3(5,0,0);
@@ -58,13 +56,23 @@ public class CardBoosterController : MonoBehaviour
         }
     }
 
-    private void AddCard(float offset){
-        CardTemplate cardTemplate = gameController.CardTemplates[Random.Range(0,gameController.CardTemplates.Count)];
-        GameObject card = GameObject.Instantiate(gameController.cardPrefab, transform.Find("cardSpawnPoint").position + new Vector3(0,0,-offset), Quaternion.identity * Quaternion.Euler(0,0,0));
-        card.transform.SetParent(transform.Find("cardSpawnPoint"));
-        card.GetComponent<CardController>().cardTemplate = cardTemplate;
-        card.GetComponent<CardController>().boosterCard = true;
-        card.GetComponent<CardController>().SetupCard();
+    private void AddCards(){
+        List<CardTemplate> cards = new List<CardTemplate>(gameController.CardTemplates);
+        
+        for(float i = 1f; i < 4f; i++){
+            float offset = i/15f;
+            
+            int randomIndex = Random.Range(0,cards.Count);
+
+            CardTemplate cardTemplate = cards[randomIndex];
+            cards.RemoveAt(randomIndex);
+            GameObject card = GameObject.Instantiate(gameController.cardPrefab, transform.Find("cardSpawnPoint").position + new Vector3(0,0,-offset), Quaternion.identity * Quaternion.Euler(0,0,0));
+            card.transform.SetParent(transform.Find("cardSpawnPoint"));
+            card.GetComponent<CardController>().cardTemplate = cardTemplate;
+            card.GetComponent<CardController>().boosterCard = true;
+            card.GetComponent<CardController>().SetupCard();
+        }
+        
     }
     
     private IEnumerator diceView(){
