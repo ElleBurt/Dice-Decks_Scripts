@@ -106,7 +106,7 @@ public class Score : MonoBehaviour
     public void UpdateMulti(int value){
         
         //basically just checks if the multi already contains a number, if not then we must set it
-        multiText.text = Regex.IsMatch(multiText.text, @"\d+") ? "x" + (int.Parse(Regex.Match(multiText.text, @"\d+").Value) + value).ToString() : "x" + value.ToString();
+        multiText.text = Regex.IsMatch(multiText.text, @"\d+") ? $"x{int.Parse(Regex.Match(multiText.text, @"\d+").Value)}" : $"x{value}";
 
     }
 
@@ -155,7 +155,7 @@ public class Score : MonoBehaviour
                 yield return new WaitForSeconds(0.3f);
             }
         }else{
-            scoreCards.ProcessCards(gameController.diceResults);
+            StartCoroutine(scoreCards.ProcessCards(gameController.diceResults));
             hasRerolled = false;
             shouldReroll = false;
         }

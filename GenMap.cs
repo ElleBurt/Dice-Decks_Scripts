@@ -259,6 +259,8 @@ public class GenMap : MonoBehaviour
 
                 RenderLine(lastIcon,decal.transform);
 
+                connectedIcons[lastIcon.gameObject].Add(decal.gameObject);
+
 
             }
         }
@@ -359,7 +361,7 @@ public class GenMap : MonoBehaviour
         yield return new WaitForSeconds(2f);
 
         while(fadeNum < 225){
-            fadeNum = fadeNum + 2f > 255f ? 255 : fadeNum + 2f;
+            fadeNum = fadeNum + 4f > 255f ? 255 : fadeNum + 4f;
             icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
             yield return null;
         }
@@ -372,7 +374,7 @@ public class GenMap : MonoBehaviour
         icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
 
         while(fadeNum > 0){
-            fadeNum = fadeNum - 2f < 2f ? 0 : fadeNum - 2f;
+            fadeNum = fadeNum - 4f < 4f ? 0 : fadeNum - 4f;
             icon.color = new Color32((byte)0,(byte)0,(byte)0,(byte)fadeNum);
             yield return null;
         }

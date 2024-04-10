@@ -11,6 +11,7 @@ public class EnemyTemplate : ScriptableObject {
     public float width;
     public int atkPower;
     public Vector2 encouterRows;
+    public int MoneyGain;
 
     [Header("Mini Details")]
     public GameObject EnemyPrefab;

@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 public class DiceDisplay : MonoBehaviour
 {
 
+    ScoreCards scoreCards;
+
     private Vector3 basePos;
     private Quaternion baseRot;
     private Vector3 hoverOffset = new Vector3(0f, 2f, 0f);
@@ -24,7 +26,7 @@ public class DiceDisplay : MonoBehaviour
     void Awake()
     {
         basePos = transform.position;
-        
+        scoreCards = FindObjectOfType<ScoreCards>();
     }
 
     //play noise on mouse over
@@ -45,6 +47,7 @@ public class DiceDisplay : MonoBehaviour
     public void DiceAdded(GameObject Dice){
         dice = Dice.transform;
         dice.rotation = new Quaternion(0,0,0,0);
+        scoreCards.ScoreAnim(CardType.EldritchRage);
     }
     public void DiceRemoved(){
         dice = null;

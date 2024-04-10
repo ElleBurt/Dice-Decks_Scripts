@@ -7,7 +7,7 @@ public class MiniScript : MonoBehaviour
     private bool hovered = false;
     public bool selected = false;
 
-    public int atkPow;
+    public EnemyTemplate enemyTemplate;
 
     public float CurrentHealth;
     public float MaxHealth;
@@ -25,6 +25,11 @@ public class MiniScript : MonoBehaviour
     {
         mapEvents = FindObjectOfType<MapEvents>();
         Health = transform.Find("Vile").Find("Health").gameObject;
+    }
+
+    public void SetupMini(){
+        CurrentHealth = enemyTemplate.MaxHealth;
+        MaxHealth = enemyTemplate.MaxHealth;
     }
 
     // Update is called once per frame

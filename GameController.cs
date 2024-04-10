@@ -28,6 +28,7 @@ public class GameController : MonoBehaviour
     [Header("Cards")]
     public List<CardTemplate> CardTemplates = new List<CardTemplate>();
     public GameObject cardPrefab;
+    CardHolder cardHolder;
 
     
 
@@ -51,6 +52,7 @@ public class GameController : MonoBehaviour
     public Transform lastIconTransform;
     private GameObject Scroll;
     private delegate bool Comparison(float CurrentHealthVolume, float NewHealthVolume);
+    public TMP_Text moneyText;
 
 
 
@@ -63,7 +65,34 @@ public class GameController : MonoBehaviour
 
     public List<int> diceResults = new List<int>();
 
+    ScoreCards scoreCards;
 
+
+    public void UpdateMoney(int ammount){
+        bool corrupt = false;
+        GameObject cardTriggered = null;
+
+        foreach(GameObject card in cardHolder.CardsHeld){
+            if(card.GetComponent<CardController>().cardType == CardType.CorruptCoins){
+                corrupt = true;
+                cardTriggered = card;
+            }
+        }
+
+        for(int i = 0; i < ammount; i++){
+            int toAdd = corrupt ? Random.Range(1,4) == 3 ? 2 : 1 : 1;
+
+            if(toAdd == 2){
+                CardController cardController = cardTriggered.GetComponent<CardController>();
+                scoreCards.ScoreAnim(CardType.CorruptCoins);
+            }
+            
+            moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) + toAdd}";
+            MoneyHeld = int.Parse(moneyText.text.Substring(1));
+        }
+
+        
+    }
     
     void Start()
     {
@@ -73,6 +102,8 @@ public class GameController : MonoBehaviour
         diceRoller = FindObjectOfType<DiceRoller>();
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
         mapEvents = FindObjectOfType<MapEvents>();
+        cardHolder = FindObjectOfType<CardHolder>();
+        scoreCards = FindObjectOfType<ScoreCards>();
     }
 
     //spawns in the starter dice and scroll, Generates map and moves camera to map. sets last icon to start icon

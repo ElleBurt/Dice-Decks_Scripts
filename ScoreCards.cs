@@ -21,8 +21,6 @@ public class ScoreCards : MonoBehaviour
     private List<CardType> ignoreCardTypes = new List<CardType>();
     private List<CardClass> ignoreCardClass = new List<CardClass>();
     private TMP_Text scoreText, multiText;
-    private int currentEnemiesKilled = 0;
-    private int currentHitsTaken = 0;
 
     void Start(){
         cardHolder = FindObjectOfType<CardHolder>();
@@ -38,9 +36,7 @@ public class ScoreCards : MonoBehaviour
             {CardType.RollingRich, RollingRich},
             {CardType.Jinx, Jinx},
             {CardType.FizzBuzz, FizzBuzz},
-            {CardType.DefenceForce, DefenceForce},
             //{CardType.PlagueDoctor, PlagueDoctor},
-            {CardType.MilitaryInvestment, MilitaryInvestment},
             {CardType.EldritchRage, EldritchRage},
             //{CardType.StrengthRitual, StrengthRitual},
         };
@@ -49,6 +45,9 @@ public class ScoreCards : MonoBehaviour
             {CardType.CorruptCoins},
             {CardType.CloseCall},
             {CardType.Economics},
+            {CardType.MilitaryInvestment},
+            {CardType.DefenceForce},
+
             
         };
 
@@ -67,7 +66,7 @@ public class ScoreCards : MonoBehaviour
     }
 
 
-    public void ProcessCards(List<int> diceValues){
+    public IEnumerator ProcessCards(List<int> diceValues){
 
         scoreText = score.scoreText;
         multiText = score.multiText;
@@ -89,6 +88,7 @@ public class ScoreCards : MonoBehaviour
                 EffectProcesses[cardClass](controller,card);
             }
             StartCoroutine(CardTriggered(card));
+            yield return new WaitForSeconds(0.75f);
         }
         //check if multi on card has already been edited if not then set it to this value or add it on to the existing one
         int currentMultiplier = Regex.Match(multiText.text, @"\d+").Success ? int.Parse(Regex.Match(multiText.text, @"\d+").Value) : 1;
@@ -103,6 +103,7 @@ public class ScoreCards : MonoBehaviour
         //stop scoring dice
         score.ScoringDice = false;
 
+        yield return new WaitForSeconds(0.35f);
         //dissolves card
         StartCoroutine(score.DissolveCard());
     }
@@ -172,37 +173,17 @@ public class ScoreCards : MonoBehaviour
 
     //-----These Are Triggered Or Updated By External Actions-----
 
-    public void MilitaryInvestment(CardController controller, GameObject card){
+    public void ScoreAnim(CardType type){
         
-        controller.AdditionValue = currentEnemiesKilled + gameController.EnemiesKilled;
-        
-        if(currentEnemiesKilled < gameController.EnemiesKilled){
-            StartCoroutine(controller.ScoreCard());
-            currentEnemiesKilled++;
+        foreach(GameObject card in cardHolder.CardsHeld){
+            if(card.GetComponent<CardController>().cardType == type){
+                StartCoroutine(card.GetComponent<CardController>().ScoreCard());
+            }
         }
-    }
-
-    public void DefenceForce(CardController controller, GameObject card){
-
-        controller.AdditionValue = gameController.HitsTaken;
-
-        if(currentHitsTaken < gameController.HitsTaken){
-            StartCoroutine(controller.ScoreCard());
-            currentHitsTaken++;
-        }
-    }
-
-    public void CorruptCoins(CardController controller, GameObject card){
         
-        int outcome = UnityEngine.Random.Range(1,4) == 3 ? 2 : 1;
-        gameController.MoneyHeld += outcome;
-        StartCoroutine(controller.ScoreCard());
     }
 
-    public void CloseCall(CardController controller, GameObject card){
-        
-        StartCoroutine(CardTriggered(card));
-    }
+   
 
     
 

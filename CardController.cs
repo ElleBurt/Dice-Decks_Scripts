@@ -11,6 +11,7 @@ public class CardController : MonoBehaviour
 {
     public GameController gameController;
     public CardTemplate cardTemplate;
+    public DiceRoller diceRoller;
 
     [Header("Card Values")]
     public int SellValue;
@@ -63,11 +64,12 @@ public class CardController : MonoBehaviour
         cardMat = gameObject.GetComponent<MeshRenderer>().material;
 
         gameController = FindObjectOfType<GameController>();
+        diceRoller = FindObjectOfType<DiceRoller>();
 
     }
 
     private void FixedUpdate() {
-        EldritchRageBonus = gameController.diceResults.Count * 3;
+        EldritchRageBonus = diceRoller.DiceHeld.Count * 3;
         DefenceForceBonus = gameController.HitsTaken;
         MilitaryInvestmentBonus = gameController.EnemiesKilled * 3;
         PlagueDoctorBonus = Mathf.FloorToInt(gameController.MoneyHeld / 3);

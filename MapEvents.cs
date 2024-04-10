@@ -20,6 +20,8 @@ public class MapEvents : MonoBehaviour {
     private GameObject currentEevnt;
     private GameObject currentScene;
     private AtkCardHolder atkCardHolder;
+    private CardHolder cardHolder;
+    private ScoreCards scoreCards;
     
 
     [Header("Encounter Related")]
@@ -38,6 +40,8 @@ public class MapEvents : MonoBehaviour {
         genMap = FindObjectOfType<GenMap>();
         diceRoller = FindObjectOfType<DiceRoller>();
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
+        cardHolder = FindObjectOfType<CardHolder>();
+        scoreCards = FindObjectOfType<ScoreCards>();
     }
 
 
@@ -106,9 +110,9 @@ public class MapEvents : MonoBehaviour {
 
         MiniScript enemyScript = newEnemy.GetComponent<MiniScript>();
 
-        enemyScript.atkPow = template.atkPower;
-        enemyScript.MaxHealth = template.MaxHealth; 
-        enemyScript.CurrentHealth = template.MaxHealth;
+        enemyScript.enemyTemplate = template;
+
+        enemyScript.SetupMini();
 
         StartCoroutine(DropEvent(newEnemy, e_spawnPos, false, false));
         StartCoroutine(DropEvent(newScene, s_spawnPos, true, true));
@@ -196,7 +200,12 @@ public class MapEvents : MonoBehaviour {
             StartCoroutine(AttackPhase());
         }else{
             yield return new WaitForSeconds(1f);
-            Destroy(SelectedEncounter);
+
+            gameController.UpdateMoney(SelectedEncounter.GetComponent<MiniScript>().enemyTemplate.MoneyGain);
+            gameController.EnemiesKilled++;
+            scoreCards.ScoreAnim(CardType.MilitaryInvestment);
+
+            Destroy(SelectedEncounter,0.5f);
             SelectedMiniDied = false;
             Destroy(activeSword);
             StartCoroutine(EventEnded(true));
@@ -205,17 +214,20 @@ public class MapEvents : MonoBehaviour {
 
     private IEnumerator AttackPhase(){
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(0.3f);
 
         SelectedEncounter.GetComponent<MiniScript>().TickDamageInflicted();
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(0.3f);
 
         int Damage = 0;
         foreach(GameObject enemy in GameObject.FindGameObjectsWithTag("Encounter")){
-            Damage += enemy.GetComponent<MiniScript>().atkPow;
+            Damage += enemy.GetComponent<MiniScript>().enemyTemplate.atkPower;
         }
         gameController.UpdateHealth(Damage,true);
+
+        scoreCards.ScoreAnim(CardType.DefenceForce);
+        gameController.HitsTaken++;
     }
 
     private IEnumerator SpinSword(GameObject sword){
