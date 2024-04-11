@@ -101,10 +101,25 @@ public class DiceBoxController : MonoBehaviour
 
     public IEnumerator ThrowBox(){
         yield return new WaitForSeconds(0.2f);
-        //gameObject.GetComponent<Animator>().SetBool("ThrowBox", true);
+        foreach(Transform col in transform){
+            if(col.CompareTag("DiceBoxSpawn") && col.childCount > 0){
+                StartCoroutine(shrinkDice(col.GetChild(0)));
+                
+            }
+        }
+        yield return new WaitForSeconds(0.5f);
+        gameObject.GetComponent<Animator>().SetBool("ThrowBag", true);
         Destroy(gameObject,3f);
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(1);
         gameController.RoundConclusion();
+    }
+
+    private IEnumerator shrinkDice(Transform die){
+        while(Vector3.Distance(die.localScale, Vector3.zero) > 0.1f){
+            die.localScale *= 0.9f;
+            yield return null;
+        }
+        Destroy(die.gameObject);
     }
 
     public IEnumerator OpenSequence(){
