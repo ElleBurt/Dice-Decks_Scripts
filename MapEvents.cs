@@ -14,6 +14,7 @@ public class MapEvents : MonoBehaviour {
     public GameObject CardPack;
     public GameObject DiceBox;
     public Vector3 BoosterSpawnPosition;
+    public Vector3 DiceBagSpawnPosition;
     private GameObject Scroll;
     private GameController gameController;
     private DiceRoller diceRoller;
@@ -60,8 +61,7 @@ public class MapEvents : MonoBehaviour {
     }
 
     public void SpawnDiceBox(){
-        GameObject diceBox = GameObject.Instantiate(DiceBox, BoosterSpawnPosition, Quaternion.identity);
-        StartCoroutine(diceBox.GetComponent<DiceBoxController>().OpenSequence());
+        GameObject diceBox = GameObject.Instantiate(DiceBox, DiceBagSpawnPosition, Quaternion.identity * Quaternion.Euler(0,90,0));
     }
 
 

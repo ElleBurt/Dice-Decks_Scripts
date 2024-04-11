@@ -16,7 +16,6 @@ public class DiceBoxController : MonoBehaviour
     };
     private Dictionary<Rarity,List<DiceTemplate>> diceWeights = new Dictionary<Rarity,List<DiceTemplate>>();
 
-    public Transform DecalSpawns;
 
     private GameController gameController;
     private DiceRoller diceRoller;
@@ -28,7 +27,6 @@ public class DiceBoxController : MonoBehaviour
 
         gameController = FindObjectOfType<GameController>();
         diceRoller = FindObjectOfType<DiceRoller>();
-        DecalSpawns = GameObject.FindGameObjectsWithTag("DecalSpawns")[0].transform;
         boxView = GameObject.FindGameObjectsWithTag("DiceBox")[0].transform;
 
         foreach(DiceTemplate template in diceRoller.DiceBlueprints){
@@ -46,7 +44,7 @@ public class DiceBoxController : MonoBehaviour
         for(int i = 0; i < 3; i++){
 
             //gets the relative spawnPos for the dice
-            Transform spawn = transform.Find($"DSpawn{i+1}");
+            Transform spawn = transform.Find($"DSP{i+1}");
 
             int baseRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f)),1,101);
             int maxRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2)),1,101);
@@ -64,15 +62,20 @@ public class DiceBoxController : MonoBehaviour
                 }
             }
 
+            int diceIndex = Random.Range(0,diceWeights[rarity].Count);
             //gets a random dice template from the dict of rarities and templates
-            DiceTemplate diceTemp = diceWeights[rarity][Random.Range(0,diceWeights[rarity].Count)];
+            DiceTemplate diceTemp = diceWeights[rarity][diceIndex];
+
+            diceWeights[rarity].RemoveAt(diceIndex);
 
             GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position ,Quaternion.identity);
-            Dice.GetComponent<DiceRoll>().diceTemplate = diceTemp;
-            Dice.transform.localScale /= 1.5f;
-            Dice.GetComponent<Rigidbody>().isKinematic = true;
-            Dice.transform.rotation = new Quaternion(0,0,0,0);
             Dice.transform.SetParent(spawn);
+            Dice.GetComponent<DiceRoll>().diceTemplate = diceTemp;
+            Rigidbody rb = Dice.GetComponent<Rigidbody>();
+            Dice.transform.rotation = new Quaternion(0,0,0,0);
+            rb.isKinematic = true;
+            
+            
             foreach(Transform col in transform){
                 if(col.CompareTag("DiceBoxSpawn")){
                     col.gameObject.GetComponent<DiceBoxHover>().animFin = true;
@@ -98,7 +101,7 @@ public class DiceBoxController : MonoBehaviour
 
     public IEnumerator ThrowBox(){
         yield return new WaitForSeconds(0.2f);
-        gameObject.GetComponent<Animator>().SetBool("ThrowBox", true);
+        //gameObject.GetComponent<Animator>().SetBool("ThrowBox", true);
         Destroy(gameObject,3f);
         yield return new WaitForSeconds(2);
         gameController.RoundConclusion();
