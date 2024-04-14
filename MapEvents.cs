@@ -56,8 +56,8 @@ public class MapEvents : MonoBehaviour {
     }
 
     public void SpawnBooster(){
-        GameObject cardPack = GameObject.Instantiate(CardPack, BoosterSpawnPosition, Quaternion.identity);
-        StartCoroutine(cardPack.GetComponent<CardBoosterController>().OpenSequence());
+        GameObject cardPack = GameObject.Instantiate(CardPack, BoosterSpawnPosition, Quaternion.identity * Quaternion.Euler(0,270,0));
+        cardPack.GetComponent<CardBoosterController>().OpenSequence();
     }
 
     public void SpawnDiceBox(){
@@ -141,19 +141,24 @@ public class MapEvents : MonoBehaviour {
 
         SpawnMap(ScrollPrefab,template.MapMaterial);
 
-        Vector3 e_spawnPos = EventSpawn.position + new Vector3(0,50,0);
+        Vector3 e_spawnPos = EventSpawn.position + new Vector3(0,50,0) + template.offset;
         Vector3 s_spawnPos = EventSpawn.position - new Vector3(0,50,0);
 
-        GameObject newEvent = GameObject.Instantiate(template.eventPrefab, e_spawnPos, Quaternion.Euler(0,90,0));
 
-        GameObject newScene = GameObject.Instantiate(template.scenePrefab, s_spawnPos, Quaternion.identity);
+        if(template.eventPrefab != null){
+            GameObject newEvent = GameObject.Instantiate(template.eventPrefab, e_spawnPos, Quaternion.Euler(0,90,0));
+            currentEevnt = newEvent;
+            StartCoroutine(DropEvent(newEvent, e_spawnPos, false, false));
+        }
+        
 
-        currentEevnt = newEvent;
-        currentScene = newScene;
-
-        StartCoroutine(DropEvent(newEvent, e_spawnPos, false, false));
-        StartCoroutine(DropEvent(newScene, s_spawnPos, true, true));
-
+        if(template.scenePrefab != null){
+            GameObject newScene = GameObject.Instantiate(template.scenePrefab, s_spawnPos, Quaternion.identity);
+            currentScene = newScene;
+            StartCoroutine(DropEvent(newScene, s_spawnPos, true, true));
+            
+        }
+        
         StartCoroutine(ActivateEvent());
     }
 

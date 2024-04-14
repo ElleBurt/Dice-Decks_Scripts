@@ -8,6 +8,7 @@ public class MapEventTemplate : ScriptableObject {
 
     public GameObject eventPrefab;
     public GameObject scenePrefab;
+    public Vector3 offset;
 
     public Texture2D MapMaterial;
 }

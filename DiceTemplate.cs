@@ -34,5 +34,8 @@ public class DiceTemplate : ScriptableObject {
     public DiceType diceType;
     public GameObject dice;
     public Rarity itemRarity;
+
+    public int basePrice;
+    public int baseSellValue;
     
 }

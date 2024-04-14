@@ -11,6 +11,7 @@ public class CardBoosterController : MonoBehaviour
     public Vector3 cardSelectionPos;
     public int cardsReady = 0;
     CardHolder cardHolder;
+    
 
     void Awake(){
         gameController = FindObjectOfType<GameController>();
@@ -18,23 +19,26 @@ public class CardBoosterController : MonoBehaviour
         mainCamera = gameController.mainCamera;
         cameraMoveSpeed = gameController.cameraMoveSpeed;
         MapView = gameController.MapView;
-    } 
 
-    void Update(){
-        if(cardsReady == 3){
-            foreach(Transform card in transform.Find("cardSpawnPoint")){
-                card.gameObject.GetComponent<CardController>().canPickup = true;
+        foreach(CardTemplate template in gameController.CardTemplates){
+            if(gameController.cardWeights.ContainsKey(template.itemRarity)){
+                gameController.cardWeights[template.itemRarity].Add(template);
+            }else{
+                gameController.cardWeights.Add(template.itemRarity, new List<CardTemplate>{template});
             }
         }
-    }
+    } 
 
     public void cardSelected(GameObject selectedCard){
-
+        
         cardHolder.CardAdded(selectedCard.GetComponent<CardController>().cardTemplate);
 
-        foreach(Transform card in transform.Find("cardSpawnPoint")){
-            card.gameObject.GetComponent<CardController>().canPickup = false;
-            Destroy(card.gameObject, 0.3f); 
+        for(float i = 1f; i < 4f; i++){
+
+            Transform spawn = transform.Find($"CS{i}");
+
+            spawn.GetChild(0).gameObject.GetComponent<CardController>().canPickup = false;
+            Destroy(spawn.GetChild(0).gameObject, 0.3f); 
         }
 
         gameObject.GetComponent<Animator>().SetBool("ThrowPack",true);
@@ -44,57 +48,63 @@ public class CardBoosterController : MonoBehaviour
         gameController.RoundConclusion();
     }
 
-    public IEnumerator OpenSequence(){
-        StartCoroutine(diceView());
+    public void OpenSequence(){
+        StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
         AddCards();
-        yield return new WaitForSeconds(2);
-
-        Vector3 moveTo = cardSelectionPos - new Vector3(5,0,0);
-        foreach(Transform card in transform.Find("cardSpawnPoint")){
-            StartCoroutine(MoveCard(card,moveTo));
-            moveTo += new Vector3(5,0,0);
-        }
+        
     }
 
-    private void AddCards(){
-        List<CardTemplate> cards = new List<CardTemplate>(gameController.CardTemplates);
-        
-        for(float i = 1f; i < 4f; i++){
-            float offset = i/15f;
-            
-            int randomIndex = Random.Range(0,cards.Count);
 
-            CardTemplate cardTemplate = cards[randomIndex];
-            cards.RemoveAt(randomIndex);
-            GameObject card = GameObject.Instantiate(gameController.cardPrefab, transform.Find("cardSpawnPoint").position + new Vector3(0,0,-offset), Quaternion.identity * Quaternion.Euler(0,0,0));
-            card.transform.SetParent(transform.Find("cardSpawnPoint"));
+
+    private void AddCards(){
+
+        for(float i = 1f; i < 4f; i++){
+
+            Transform spawn = transform.Find($"CS{i}");
+            spawn.GetComponent<BoxCollider>().enabled = false;
+
+            int baseRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f)),1,101);
+            int maxRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2)),1,101);
+
+            //1-100 
+            int rarityPercent = Random.Range(baseRarityPerc,maxRarityPerc);
+
+            Rarity rarity = Rarity.Common;
+
+            foreach(KeyValuePair<Rarity, int> kvp in gameController.roundWeights){
+                if(rarityPercent > kvp.Value){
+                    rarity = kvp.Key;
+                    break;
+                }
+            }
+
+            int cardIndex = Random.Range(0,gameController.cardWeights[rarity].Count);
+
+            CardTemplate cardTemplate = gameController.cardWeights[rarity][cardIndex];
+            gameController.cardWeights[rarity].RemoveAt(cardIndex);
+
+            GameObject card = GameObject.Instantiate(gameController.cardPrefab, spawn.position, Quaternion.identity * Quaternion.Euler(0,180,0));
+            card.transform.SetParent(spawn);
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
             card.GetComponent<CardController>().boosterCard = true;
+            card.GetComponent<BoxCollider>().enabled = false;
             card.GetComponent<CardController>().SetupCard();
         }
         
     }
+
+
     
-    private IEnumerator diceView(){
-        Camera mainCamera = gameController.mainCamera;
-        float cameraMoveSpeed = gameController.cameraMoveSpeed;
-        Transform boxView = GameObject.FindGameObjectsWithTag("DiceBox")[0].transform;
-        yield return new WaitForSeconds(1.5f);
-        while(Vector3.Distance(mainCamera.transform.position, boxView.position) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, boxView.position, cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(30f,0f,0f), cameraMoveSpeed * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
+    public void enableColliders(){
+        for(float i = 1f; i < 4f; i++){
+            Transform spawn = transform.Find($"CS{i}");
+            spawn.GetChild(0).GetComponent<CardController>().basePos = spawn.position;
+            
+            spawn.GetComponent<CardHover>().boosterCard = true;
+            spawn.GetComponent<CardHover>().Setup();
+            spawn.GetComponent<BoxCollider>().enabled = true;
         }
-        
-        
     }
 
-    public IEnumerator MoveCard(Transform card, Vector3 moveTo){
-        while(Vector3.Distance(card.position,moveTo) > 0.1f && Quaternion.Angle(card.rotation, Quaternion.Euler(-30,180,0)) > 0.1f){
-            card.position = Vector3.Lerp(card.position, moveTo, cameraMoveSpeed * Time.deltaTime);
-            card.rotation = Quaternion.Slerp(card.rotation , Quaternion.Euler(-30,180,0), cameraMoveSpeed * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
-        }
-        cardsReady++;
-    }
+   
 }

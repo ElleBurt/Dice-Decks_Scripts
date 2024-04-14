@@ -6,34 +6,21 @@ using UnityEngine.EventSystems;
 
 public class DiceBoxController : MonoBehaviour
 {
-    private Dictionary<Rarity, int> roundWeights = new Dictionary<Rarity, int>(){
-        {Rarity.CurrentlyImpossible,100},
-        {Rarity.Legendary,95},
-        {Rarity.Epic,80},
-        {Rarity.Rare,40},
-        {Rarity.Uncommon,15},
-        {Rarity.Common,0},
-    };
-    private Dictionary<Rarity,List<DiceTemplate>> diceWeights = new Dictionary<Rarity,List<DiceTemplate>>();
-
-
     private GameController gameController;
     private DiceRoller diceRoller;
 
-    public Transform boxView;
 
 
     void Awake(){
 
         gameController = FindObjectOfType<GameController>();
         diceRoller = FindObjectOfType<DiceRoller>();
-        boxView = GameObject.FindGameObjectsWithTag("DiceBox")[0].transform;
 
         foreach(DiceTemplate template in diceRoller.DiceBlueprints){
-            if(diceWeights.ContainsKey(template.itemRarity)){
-                diceWeights[template.itemRarity].Add(template);
+            if(gameController.diceWeights.ContainsKey(template.itemRarity)){
+                gameController.diceWeights[template.itemRarity].Add(template);
             }else{
-                diceWeights.Add(template.itemRarity, new List<DiceTemplate>{template});
+                gameController.diceWeights.Add(template.itemRarity, new List<DiceTemplate>{template});
             }
         }
         
@@ -55,18 +42,18 @@ public class DiceBoxController : MonoBehaviour
             //gets the rarity by comparing the rarityPercent to the list of weights for the current round
             Rarity rarity = Rarity.Common;
 
-            foreach(KeyValuePair<Rarity, int> kvp in roundWeights){
+            foreach(KeyValuePair<Rarity, int> kvp in gameController.roundWeights){
                 if(rarityPercent > kvp.Value){
                     rarity = kvp.Key;
                     break;
                 }
             }
 
-            int diceIndex = Random.Range(0,diceWeights[rarity].Count);
+            int diceIndex = Random.Range(0,gameController.diceWeights[rarity].Count);
             //gets a random dice template from the dict of rarities and templates
-            DiceTemplate diceTemp = diceWeights[rarity][diceIndex];
+            DiceTemplate diceTemp = gameController.diceWeights[rarity][diceIndex];
 
-            diceWeights[rarity].RemoveAt(diceIndex);
+            gameController.diceWeights[rarity].RemoveAt(diceIndex);
 
             GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position ,Quaternion.identity);
             Dice.transform.SetParent(spawn);
@@ -82,7 +69,7 @@ public class DiceBoxController : MonoBehaviour
                 }
             }
         }
-        StartCoroutine(diceView());
+        StartCoroutine(gameController.DiceViewAnim());
     }
 
     public void closeBox(Transform child){
@@ -125,19 +112,6 @@ public class DiceBoxController : MonoBehaviour
     public IEnumerator OpenSequence(){
         SpawnDice();
         yield return null;
-    }
-
-    private IEnumerator diceView(){
-        Camera mainCamera = gameController.mainCamera;
-        float cameraMoveSpeed = gameController.cameraMoveSpeed;
-        yield return new WaitForSeconds(1.5f);
-        while(Vector3.Distance(mainCamera.transform.position, boxView.position) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, boxView.position, cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(30f,0f,0f), cameraMoveSpeed * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
-        }
-        
-        
     }
 
 }

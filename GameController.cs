@@ -56,12 +56,29 @@ public class GameController : MonoBehaviour
 
 
 
-    [Header("Stats")]
+    [Header("Game Stats")]
     public int HitsTaken = 0;
     public int DamageTaken = 0;
     public int EnemiesKilled = 0;
     public int MoneyHeld = 0;
     public int TickDamage = 0;
+
+
+    [Header("Booster properties")]
+    public Dictionary<Rarity, int> roundWeights = new Dictionary<Rarity, int>(){
+        {Rarity.CurrentlyImpossible,100},
+        {Rarity.Legendary,95},
+        {Rarity.Epic,80},
+        {Rarity.Rare,40},
+        {Rarity.Uncommon,15},
+        {Rarity.Common,0},
+    };
+    public Dictionary<Rarity,List<DiceTemplate>> diceWeights = new Dictionary<Rarity,List<DiceTemplate>>();
+    public Dictionary<Rarity,List<CardTemplate>> cardWeights = new Dictionary<Rarity,List<CardTemplate>>();
+
+
+    public List<BoosterTemplate> boosters = new List<BoosterTemplate>();
+
 
     public List<int> diceResults = new List<int>();
 
@@ -325,6 +342,15 @@ public class GameController : MonoBehaviour
         Destroy(Scroll, 1f);
     }
 
+    public IEnumerator MoveCameraTo(Transform newView){
+        cameraAlignedToMap = false;
+        yield return new WaitForSeconds(0.1f);
+        while(Vector3.Distance(mainCamera.transform.position, newView.position) > 0.1f){
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, newView.position, cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,newView.rotation, cameraMoveSpeed * Time.deltaTime);
+            yield return new WaitForSeconds(0.01f);
+        }
+    }
    
 
 }

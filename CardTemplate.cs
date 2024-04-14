@@ -33,6 +33,7 @@ public enum CardType{
 public class CardTemplate : ScriptableObject {
     public new string name;
     public CardType cardType;
+    public Rarity itemRarity;
 
     [TextAreaAttribute]
     public string description;

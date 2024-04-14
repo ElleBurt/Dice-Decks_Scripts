@@ -69,15 +69,15 @@ public class DiceDisplay : MonoBehaviour
                     GameObject dice = transform.GetChild(0).gameObject;
                     DiceTemplate dt = dice.GetComponent<DiceRoll>().diceTemplate;
                     Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";
-                    Desc.transform.Find("RightSide").Find("SideInfo").Find("High").GetComponent<TMP_Text>().text = $"Highest: {dt.hiVal}";
-                    Desc.transform.Find("RightSide").Find("SideInfo").Find("Low").GetComponent<TMP_Text>().text = $"Lowest: {dt.loVal}";
+                    Desc.transform.Find("RightSide").Find("SideInfo").Find("High").GetComponent<TMP_Text>().text = $"High: {dt.hiVal}";
+                    Desc.transform.Find("RightSide").Find("SideInfo").Find("Low").GetComponent<TMP_Text>().text = $"Low: {dt.loVal}";
                     Desc.transform.SetParent(dice.transform);
 
                     Transform SpecFaces = Desc.transform.Find("RightSide").Find("Faces");
 
                     int index = 0;
                     foreach(Transform child in dice.transform){
-                        if(Regex.IsMatch(child.name,@"\D") && child.name != "DiceResult" && child.name != "ItemDesc(Clone)"){
+                        if(Regex.IsMatch(child.name,@"\D") && child.name != "DiceResult" && child.name != "DiceItemDesc(Clone)"){
                             GameObject faceTemp = Instantiate(Resources.Load($"UI/Prefabs/FaceTemp") as GameObject);
                             faceTemp.transform.Find("Face").GetComponent<Image>().sprite = (Resources.Load<Sprite>($"UI/Faces/{child.name}"));
                             faceTemp.transform.SetParent(SpecFaces);
