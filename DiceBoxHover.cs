@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Text.RegularExpressions;
 
-public class DiceBoxHover : MonoBehaviour
+public class DiceBoxHover : MonoBehaviour, GetValues
 {
     public bool animFin = false;
     DiceRoller diceRoller;
@@ -15,11 +15,30 @@ public class DiceBoxHover : MonoBehaviour
     public float scaleFactor = 1.0f;
     public float offsetFactor = 1.0f;
 
+    public bool inCheckout = false;
+    public bool marketDice = false;
+    
+    DiceTemplate dt;
+
     private GameObject openDesc;
 
     void Awake(){
         diceRoller = FindObjectOfType<DiceRoller>();
     }
+
+    public bool GetStage(){
+        return inCheckout;
+    }
+
+    public void SetStage(){
+        inCheckout = !inCheckout;
+    }
+
+    public Dictionary<string, float> GetValuesAvailable(){
+        return new Dictionary<string, float> {{"Buy", dt.basePrice},{"Sell", dt.baseSellValue}};
+    }
+
+
     private void OnMouseEnter() {
         if(animFin){
             transform.GetChild(0).position = transform.position + new Vector3(0, 2*offsetFactor, 0);
@@ -33,7 +52,7 @@ public class DiceBoxHover : MonoBehaviour
 
                 GameObject dice = transform.GetChild(0).gameObject;
 
-                DiceTemplate dt = dice.GetComponent<DiceRoll>().diceTemplate;
+                dt = dice.GetComponent<DiceRoll>().diceTemplate;
                 Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";
                 Desc.transform.Find("RightSide").Find("SideInfo").Find("High").GetComponent<TMP_Text>().text = $"High: {dt.hiVal}";
                 Desc.transform.Find("RightSide").Find("SideInfo").Find("Low").GetComponent<TMP_Text>().text = $"Low: {dt.loVal}";
@@ -72,8 +91,9 @@ public class DiceBoxHover : MonoBehaviour
         }
         
     }
-    void Update(){
-        if(hovered && Input.GetMouseButtonDown(0)){
+
+    void OnMouseDown(){
+        if(hovered && !marketDice){
             diceRoller.AddDice(transform.GetChild(0).GetComponent<DiceRoll>().diceTemplate);
             animFin = false;
             transform.parent.GetComponent<DiceBoxController>().closeBox(transform);

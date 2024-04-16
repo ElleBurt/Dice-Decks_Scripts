@@ -25,10 +25,16 @@ public class GameController : MonoBehaviour
     [Header("Event")]
     public List<MapEventTemplate> Events = new List<MapEventTemplate>();
 
-    [Header("Cards")]
-    public List<CardTemplate> CardTemplates = new List<CardTemplate>();
+    [Header("Items")]
+    
     public GameObject cardPrefab;
     CardHolder cardHolder;
+
+    public List<DiceTemplate> DiceTemplates = new List<DiceTemplate>();
+
+    public List<CardTemplate> CardTemplates = new List<CardTemplate>();
+
+    public List<BoosterTemplate> boosters = new List<BoosterTemplate>();
 
     
 
@@ -39,10 +45,8 @@ public class GameController : MonoBehaviour
     public GameObject HealthVile;    
 
 
-    [Header("DiceRoller properties")]
     DiceRoller diceRoller;
 
-    [Header("atkCardHolder Properties")]
     AtkCardHolder atkCardHolder;
 
 
@@ -73,11 +77,11 @@ public class GameController : MonoBehaviour
         {Rarity.Uncommon,15},
         {Rarity.Common,0},
     };
-    public Dictionary<Rarity,List<DiceTemplate>> diceWeights = new Dictionary<Rarity,List<DiceTemplate>>();
-    public Dictionary<Rarity,List<CardTemplate>> cardWeights = new Dictionary<Rarity,List<CardTemplate>>();
+    
+    //public Dictionary<Rarity,List<CardTemplate>> cardWeights = new Dictionary<Rarity,List<CardTemplate>>();
 
 
-    public List<BoosterTemplate> boosters = new List<BoosterTemplate>();
+    
 
 
     public List<int> diceResults = new List<int>();
@@ -85,28 +89,100 @@ public class GameController : MonoBehaviour
     ScoreCards scoreCards;
 
 
-    public void UpdateMoney(int ammount){
-        bool corrupt = false;
-        GameObject cardTriggered = null;
+    public Dictionary<Rarity, (List<DiceTemplate>, List<CardTemplate>) > ItemWeights = new Dictionary<Rarity, (List<DiceTemplate>, List<CardTemplate>) >();
 
-        foreach(GameObject card in cardHolder.CardsHeld){
-            if(card.GetComponent<CardController>().cardType == CardType.CorruptCoins){
-                corrupt = true;
-                cardTriggered = card;
+    public void SetItemWeights(){
+
+        ItemWeights = new Dictionary<Rarity, (List<DiceTemplate>, List<CardTemplate>)>(){
+            {Rarity.CurrentlyImpossible,(new List<DiceTemplate>{}, new List<CardTemplate>{})},
+            {Rarity.Legendary,(new List<DiceTemplate>{}, new List<CardTemplate>{})},
+            {Rarity.Epic,(new List<DiceTemplate>{}, new List<CardTemplate>{})},
+            {Rarity.Rare,(new List<DiceTemplate>{}, new List<CardTemplate>{})},
+            {Rarity.Uncommon,(new List<DiceTemplate>{}, new List<CardTemplate>{})},
+            {Rarity.Common,(new List<DiceTemplate>{}, new List<CardTemplate>{})},
+        };
+
+        foreach(DiceTemplate template in DiceTemplates){
+            ItemWeights[template.itemRarity].Item1.Add(template);
+        }
+
+        foreach(CardTemplate template in CardTemplates){
+            ItemWeights[template.itemRarity].Item2.Add(template);
+        }
+
+    }
+
+    public (Rarity, int) RandomItem(string type){
+
+        int baseRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(currentRound,2) / Random.Range(1.2f,1.5f)),1,101);
+        int maxRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(currentRound,2)),1,101);
+
+        //1-100 
+        int rarityPercent = Random.Range(baseRarityPerc,maxRarityPerc);
+
+        List<Rarity> rarities = new List<Rarity>();
+
+        foreach(KeyValuePair<Rarity, int> kvp in roundWeights){
+            if(rarityPercent < kvp.Value){
+                break;
+            }
+            rarities.Add(kvp.Key);
+        }
+
+        (Rarity, int) item = (Rarity.Common,0);
+
+
+        if(type == "Dice"){
+            foreach(Rarity rarity in rarities){
+                if(ItemWeights[rarity].Item1.Count > 0){
+                    item = (rarity,Random.Range(0,ItemWeights[rarity].Item1.Count));
+                }else{
+                    continue;
+                }
+            }
+        }else{
+            foreach(Rarity rarity in rarities){
+                if(ItemWeights[rarity].Item2.Count > 0){
+                    item = (rarity,Random.Range(0,ItemWeights[rarity].Item2.Count));
+                }else{
+                    continue;
+                }
             }
         }
 
-        for(int i = 0; i < ammount; i++){
-            int toAdd = corrupt ? Random.Range(1,4) == 3 ? 2 : 1 : 1;
+        return item;
+    }
 
-            if(toAdd == 2){
-                CardController cardController = cardTriggered.GetComponent<CardController>();
-                scoreCards.ScoreAnim(CardType.CorruptCoins);
+
+    public void UpdateMoney(int ammount, bool isBuying){
+
+        if(!isBuying){
+            bool corrupt = false;
+            GameObject cardTriggered = null;
+
+            foreach(GameObject card in cardHolder.CardsHeld){
+                if(card.GetComponent<CardController>().cardType == CardType.CorruptCoins){
+                    corrupt = true;
+                    cardTriggered = card;
+                }
             }
-            
-            moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) + toAdd}";
+
+            for(int i = 0; i < ammount; i++){
+                int toAdd = corrupt ? Random.Range(1,4) == 3 ? 2 : 1 : 1;
+
+                if(toAdd == 2){
+                    CardController cardController = cardTriggered.GetComponent<CardController>();
+                    scoreCards.ScoreAnim(CardType.CorruptCoins);
+                }
+                
+                moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) + toAdd}";
+                MoneyHeld = int.Parse(moneyText.text.Substring(1));
+            }
+        }else{
+            moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) - ammount}";
             MoneyHeld = int.Parse(moneyText.text.Substring(1));
         }
+        
 
         
     }
@@ -243,11 +319,11 @@ public class GameController : MonoBehaviour
             break;
 
             case "Card Booster":
-                mapEvents.SpawnBooster();
+                mapEvents.SpawnBooster(false);
             break;
 
             case "Dice Booster":
-                mapEvents.SpawnDiceBox();
+                mapEvents.SpawnDiceBox(false);
             break;
 
             default:

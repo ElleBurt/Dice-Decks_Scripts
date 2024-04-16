@@ -11,6 +11,8 @@ public class CardBoosterController : MonoBehaviour
     public Vector3 cardSelectionPos;
     public int cardsReady = 0;
     CardHolder cardHolder;
+
+    public bool wasBrought = false;
     
 
     void Awake(){
@@ -20,16 +22,13 @@ public class CardBoosterController : MonoBehaviour
         cameraMoveSpeed = gameController.cameraMoveSpeed;
         MapView = gameController.MapView;
 
-        foreach(CardTemplate template in gameController.CardTemplates){
-            if(gameController.cardWeights.ContainsKey(template.itemRarity)){
-                gameController.cardWeights[template.itemRarity].Add(template);
-            }else{
-                gameController.cardWeights.Add(template.itemRarity, new List<CardTemplate>{template});
-            }
-        }
+        gameController.SetItemWeights();
+        
+        AddCards();
     } 
 
     public void cardSelected(GameObject selectedCard){
+
         
         cardHolder.CardAdded(selectedCard.GetComponent<CardController>().cardTemplate);
 
@@ -45,14 +44,17 @@ public class CardBoosterController : MonoBehaviour
 
         Destroy(gameObject, 3f);
 
-        gameController.RoundConclusion();
-    }
 
-    public void OpenSequence(){
-        StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
-        AddCards();
+        if(wasBrought){
+            MarketEventController MEC = FindObjectOfType<MarketEventController>();
+            MEC.ProcessBoosters(); 
+        }else{
+            gameController.RoundConclusion();
+        }
         
     }
+
+    
 
 
 
@@ -61,27 +63,13 @@ public class CardBoosterController : MonoBehaviour
         for(float i = 1f; i < 4f; i++){
 
             Transform spawn = transform.Find($"CS{i}");
-            spawn.GetComponent<BoxCollider>().enabled = false;
+            (Rarity, int) values = gameController.RandomItem("Card");
 
-            int baseRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f)),1,101);
-            int maxRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2)),1,101);
+            Rarity rarity = values.Item1;
+            int index = values.Item2;
 
-            //1-100 
-            int rarityPercent = Random.Range(baseRarityPerc,maxRarityPerc);
-
-            Rarity rarity = Rarity.Common;
-
-            foreach(KeyValuePair<Rarity, int> kvp in gameController.roundWeights){
-                if(rarityPercent > kvp.Value){
-                    rarity = kvp.Key;
-                    break;
-                }
-            }
-
-            int cardIndex = Random.Range(0,gameController.cardWeights[rarity].Count);
-
-            CardTemplate cardTemplate = gameController.cardWeights[rarity][cardIndex];
-            gameController.cardWeights[rarity].RemoveAt(cardIndex);
+            CardTemplate cardTemplate = gameController.ItemWeights[rarity].Item2[index];
+            gameController.ItemWeights[rarity].Item2.RemoveAt(index);
 
             GameObject card = GameObject.Instantiate(gameController.cardPrefab, spawn.position, Quaternion.identity * Quaternion.Euler(0,180,0));
             card.transform.SetParent(spawn);

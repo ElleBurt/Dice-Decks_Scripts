@@ -4,7 +4,13 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class BoosterHover : MonoBehaviour
+public interface GetValues{
+    public Dictionary<string, float> GetValuesAvailable();
+    public bool GetStage();
+    public void SetStage();
+}
+
+public class BoosterHover : MonoBehaviour, GetValues
 {
     public BoosterTemplate boosterTemp;
     public GameObject ItemDesc;
@@ -13,8 +19,22 @@ public class BoosterHover : MonoBehaviour
     public float scaleFactor = 1.0f;
     public float offsetFactor = 1.0f;
 
+    public bool inCheckout = false;
+
     void OnMouseDown(){
 
+    }
+
+    public bool GetStage(){
+        return inCheckout;
+    }
+
+    public void SetStage(){
+        inCheckout = !inCheckout;
+    }
+
+    public Dictionary<string, float> GetValuesAvailable(){
+        return new Dictionary<string, float> {{"Buy", boosterTemp.basePrice},{"Sell", 0f}};
     }
 
     void OnMouseEnter(){

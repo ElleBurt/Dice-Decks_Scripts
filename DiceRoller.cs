@@ -39,9 +39,12 @@ public class DiceRoller : MonoBehaviour
 
    public AudioClip diceHit;
 
+   GameController gameController;
+
    //Finds score script and also adds all the dice slots to a list 
    void Awake(){
         score = FindObjectOfType<Score>();
+        gameController = FindObjectOfType<GameController>();
 
         Transform DiceDisplay = GameObject.FindWithTag("DiceDisplay").transform;
 
@@ -56,7 +59,7 @@ public class DiceRoller : MonoBehaviour
         //gives you the starter 2x d6s 
         for(int i = 0; i < 2; i++){
 
-            AddDice(DiceBlueprints[0]);
+            AddDice(gameController.DiceTemplates[0]);
             
         }
     

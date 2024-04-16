@@ -114,7 +114,7 @@ public class ScoreDice : MonoBehaviour
     private void Poker(string value){
         switch(value){
             case "Joker":
-
+                Basic("0");
             break;
             
             case "Ace":

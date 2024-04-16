@@ -55,13 +55,16 @@ public class MapEvents : MonoBehaviour {
         Scroll.GetComponent<SkinnedMeshRenderer>().material = newMat;
     }
 
-    public void SpawnBooster(){
+    public void SpawnBooster(bool fromMarket){
+        StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
         GameObject cardPack = GameObject.Instantiate(CardPack, BoosterSpawnPosition, Quaternion.identity * Quaternion.Euler(0,270,0));
-        cardPack.GetComponent<CardBoosterController>().OpenSequence();
+        cardPack.GetComponent<CardBoosterController>().wasBrought = fromMarket;
     }
 
-    public void SpawnDiceBox(){
+    public void SpawnDiceBox(bool fromMarket){
+        StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
         GameObject diceBox = GameObject.Instantiate(DiceBox, DiceBagSpawnPosition, Quaternion.identity * Quaternion.Euler(0,90,0));
+        diceBox.GetComponent<DiceBoxController>().wasBrought = fromMarket;
     }
 
 
@@ -114,8 +117,8 @@ public class MapEvents : MonoBehaviour {
 
         enemyScript.SetupMini();
 
-        StartCoroutine(DropEvent(newEnemy, e_spawnPos, false, false));
-        StartCoroutine(DropEvent(newScene, s_spawnPos, true, true));
+        StartCoroutine(DropEvent(newEnemy, e_spawnPos));
+        StartCoroutine(DropEvent(newScene, s_spawnPos));
 
         yield return new WaitForSeconds(2f);
 
@@ -148,14 +151,14 @@ public class MapEvents : MonoBehaviour {
         if(template.eventPrefab != null){
             GameObject newEvent = GameObject.Instantiate(template.eventPrefab, e_spawnPos, Quaternion.Euler(0,90,0));
             currentEevnt = newEvent;
-            StartCoroutine(DropEvent(newEvent, e_spawnPos, false, false));
+            StartCoroutine(DropEvent(newEvent, e_spawnPos));
         }
         
 
         if(template.scenePrefab != null){
             GameObject newScene = GameObject.Instantiate(template.scenePrefab, s_spawnPos, Quaternion.identity);
             currentScene = newScene;
-            StartCoroutine(DropEvent(newScene, s_spawnPos, true, true));
+            StartCoroutine(DropEvent(newScene, s_spawnPos));
             
         }
         
@@ -163,31 +166,20 @@ public class MapEvents : MonoBehaviour {
     }
 
 
-    public IEnumerator DropEvent(GameObject prefab, Vector3 spawnPos, bool isUp, bool isScene){
+    public IEnumerator DropEvent(GameObject prefab, Vector3 spawnPos){
 
         yield return new WaitForSeconds(1.5f);
 
-        //okay this may look a little confusing but its rather simple
-        float speed = isUp && isScene ? 3f //if its a scene moving up (this is when the event begins)
-                    : isUp ? 4f //if its not a scene but is moving up (this is when the event concludes)
-                    : isScene ? 2f //if its a scene moving down (this is when the event concludes)
-                    : 5f; //if its not a scene moving down (these are encounters and event prefabs, and is at the start of new events)
+        float speed = 3f;
 
-        if(isUp){
-            while(Vector3.Distance(prefab.transform.position, (spawnPos + new Vector3(0,51f,0))) > 0.1f){
+    
+        while(Vector3.Distance(prefab.transform.position, (spawnPos - new Vector3(0,51f,0))) > 0.1f){
 
-                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos + new Vector3(0,51f,0)), speed * Time.deltaTime);
+            prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos - new Vector3(0,51f,0)), speed * Time.deltaTime);
 
-                yield return null;
-            }
-        }else{
-            while(Vector3.Distance(prefab.transform.position, (spawnPos - new Vector3(0,51f,0))) > 0.1f){
-
-                prefab.transform.position = Vector3.Lerp(prefab.transform.position, (spawnPos - new Vector3(0,51f,0)), speed * Time.deltaTime);
-
-                yield return null;
-            }
+            yield return null;
         }
+        
 
     }
 
@@ -206,14 +198,14 @@ public class MapEvents : MonoBehaviour {
         }else{
             yield return new WaitForSeconds(1f);
 
-            gameController.UpdateMoney(SelectedEncounter.GetComponent<MiniScript>().enemyTemplate.MoneyGain);
+            gameController.UpdateMoney(SelectedEncounter.GetComponent<MiniScript>().enemyTemplate.MoneyGain,false);
             gameController.EnemiesKilled++;
             scoreCards.ScoreAnim(CardType.MilitaryInvestment);
 
             Destroy(SelectedEncounter,0.5f);
             SelectedMiniDied = false;
             Destroy(activeSword);
-            StartCoroutine(EventEnded(true));
+            StartCoroutine(EventEnded());
         }   
     }
 
@@ -250,21 +242,27 @@ public class MapEvents : MonoBehaviour {
         eMid.ExecuteEvent();
     }
 
-    public IEnumerator EventEnded(bool isEncounter){
+    public IEnumerator EventEnded(){
 
-        if(!isEncounter){
-            StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position, true, false));
+        if(currentEevnt != null){
+            StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position));
+            Destroy(currentEevnt,5f);
         }
-        StartCoroutine(DropEvent(currentScene, currentScene.transform.position, false, true));
+        if(currentScene != null){
+            StartCoroutine(DropEvent(currentScene, currentScene.transform.position));
+            Destroy(currentScene,5f);
+        }
+        
 
         yield return new WaitForSeconds(1f);
 
         Scroll.GetComponent<Animator>().SetBool("IconSelected", true);
 
         yield return new WaitForSeconds(3f);
+        
         Destroy(Scroll,1f);
-        Destroy(currentScene,1f);
-        Destroy(currentEevnt,1f);
+        
+        
 
         gameController.RoundConclusion();
     }

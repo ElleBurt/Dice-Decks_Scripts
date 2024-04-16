@@ -1,42 +1,45 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using TMPro;
+using UnityEngine.UI;
+using System.Linq;
 
-public class MarketEventController : MonoBehaviour, EventMedium
+public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHandler
 {
     private GameController gameController;
     private MapEvents mapEvents;
     private DiceRoller diceRoller;
+    private CardHolder cardHolder;
 
     public Vector3 spOffset;
     public GameObject DiceBagPrefab; //hey that has a catch to it
     public GameObject CardBoosterPrefab; 
 
-    void Start(){
+    private TMP_Text moneyText;
+    private TMP_Text checkoutText;
+
+    private int totalValue = 0;
+    public int boosterCount = 0;
+
+    private List<GameObject> itemsAtCheckout = new List<GameObject>();
+
+
+    void Awake(){
         mapEvents = FindObjectOfType<MapEvents>();
-    }
-
-    public void ExecuteEvent(){
-
         gameController = FindObjectOfType<GameController>();
         diceRoller = FindObjectOfType<DiceRoller>();
 
-        foreach(DiceTemplate template in diceRoller.DiceBlueprints){
-            if(gameController.diceWeights.ContainsKey(template.itemRarity)){
-                gameController.diceWeights[template.itemRarity].Add(template);
-            }else{
-                gameController.diceWeights.Add(template.itemRarity, new List<DiceTemplate>{template});
-            }
-        }
+        moneyText = transform.Find("Money").Find("Value").GetComponent<TMP_Text>();
+        checkoutText = transform.Find("Checkout").GetChild(0).GetComponent<TMP_Text>();
+        moneyText.text = $"${gameController.MoneyHeld}";
+        
+    }
 
-        foreach(CardTemplate template in gameController.CardTemplates){
-            if(gameController.cardWeights.ContainsKey(template.itemRarity)){
-                gameController.cardWeights[template.itemRarity].Add(template);
-            }else{
-                gameController.cardWeights.Add(template.itemRarity, new List<CardTemplate>{template});
-            }
-        }
-
+    public void ExecuteEvent(){
+        
+        gameController.SetItemWeights();
         SpawnDice();
         SpawnCards();
         SpawnBoosters();
@@ -50,32 +53,22 @@ public class MarketEventController : MonoBehaviour, EventMedium
             //gets the relative spawnPos for the dice
             Transform spawn = transform.Find($"DicePos{i}_buy");
 
-            int baseRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f)),1,101);
-            int maxRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2)),1,101);
+            (Rarity, int) values = gameController.RandomItem("Dice");
 
-            //1-100 
-            int rarityPercent = Random.Range(baseRarityPerc,maxRarityPerc);
+            Rarity rarity = values.Item1;
+            int index = values.Item2;
 
-            //gets the rarity by comparing the rarityPercent to the list of weights for the current round
-            Rarity rarity = Rarity.Common;
-
-            foreach(KeyValuePair<Rarity, int> kvp in gameController.roundWeights){
-                if(rarityPercent > kvp.Value){
-                    rarity = kvp.Key;
-                    break;
-                }
-            }
-
-            int diceIndex = Random.Range(0,gameController.diceWeights[rarity].Count);
             //gets a random dice template from the dict of rarities and templates
-            DiceTemplate diceTemp = gameController.diceWeights[rarity][diceIndex];
+            DiceTemplate diceTemp = gameController.ItemWeights[rarity].Item1[index];
 
-            gameController.diceWeights[rarity].RemoveAt(diceIndex);
+            gameController.ItemWeights[rarity].Item1.RemoveAt(index);
 
             GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position,Quaternion.identity);
             Dice.transform.SetParent(spawn);
             Dice.transform.localScale /= 2.3f;
             Dice.GetComponent<DiceRoll>().diceTemplate = diceTemp;
+            spawn.GetComponent<DiceBoxHover>().marketDice = true;
+            Dice.GetComponent<MeshCollider>().enabled = false;
             Rigidbody rb = Dice.GetComponent<Rigidbody>();
             Dice.transform.rotation = new Quaternion(0,0,0,0);
             rb.isKinematic = true;
@@ -95,25 +88,13 @@ public class MarketEventController : MonoBehaviour, EventMedium
 
             Transform spawn = transform.Find($"CardPos{i}_buy");
 
-            int baseRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2) / Random.Range(1.2f,1.5f)),1,101);
-            int maxRarityPerc = Mathf.Clamp(Mathf.CeilToInt(Mathf.Pow(gameController.currentRound,2)),1,101);
+            (Rarity, int) values = gameController.RandomItem("Card");
 
-            //1-100 
-            int rarityPercent = Random.Range(baseRarityPerc,maxRarityPerc);
+            Rarity rarity = values.Item1;
+            int index = values.Item2;
 
-            Rarity rarity = Rarity.Common;
-
-            foreach(KeyValuePair<Rarity, int> kvp in gameController.roundWeights){
-                if(rarityPercent > kvp.Value){
-                    rarity = kvp.Key;
-                    break;
-                }
-            }
-
-            int cardIndex = Random.Range(0,gameController.cardWeights[rarity].Count);
-
-            CardTemplate cardTemplate = gameController.cardWeights[rarity][cardIndex];
-            gameController.cardWeights[rarity].RemoveAt(cardIndex);
+            CardTemplate cardTemplate = gameController.ItemWeights[rarity].Item2[index];
+            gameController.ItemWeights[rarity].Item2.RemoveAt(index);
 
             GameObject card = GameObject.Instantiate(gameController.cardPrefab, spawn.position, Quaternion.Euler(-20,180,0));
             card.transform.SetParent(spawn);
@@ -139,7 +120,110 @@ public class MarketEventController : MonoBehaviour, EventMedium
     }
 
 
-    public void ItemSelected(GameObject item){
+    public void OnPointerClick(PointerEventData pointerEventData){
+        List<GameObject> itemsHovered = pointerEventData.hovered;
 
+        for (int i = 0; i < itemsHovered.Count; i++){
+            if(itemsHovered[i].name == "MarketStand(Clone)"){
+                itemsHovered.RemoveAt(i);
+            }
+        }
+
+        GameObject SelectedItem = itemsHovered[0];
+
+        GameObject selectedChild = SelectedItem.transform.GetChild(0).gameObject;
+
+        switch(SelectedItem.name){
+
+            case "deskbell":
+                if(totalValue <= gameController.MoneyHeld && totalValue > 0){
+                    gameController.UpdateMoney(totalValue,true);
+                    moneyText.text = $"${gameController.MoneyHeld}";
+
+                    ProcessItems();
+                }
+            break;
+
+            case "CowBell":
+                StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
+                StartCoroutine(mapEvents.EventEnded());
+            break;
+
+            default:
+                GetValues values = SelectedItem.GetComponent<GetValues>();
+                Dictionary<string,float> containedValues = values.GetValuesAvailable();
+
+                int price = (int)containedValues["Buy"];
+                int sell = (int)containedValues["Sell"];
+
+                bool inCheckout = values.GetStage();
+
+                if(!inCheckout){
+                    SelectedItem.transform.position += new Vector3(7.7f,0,0);
+                    totalValue += price;
+                    itemsAtCheckout.Add(selectedChild);
+
+
+                    boosterCount += selectedChild.transform.tag.Contains("Booster") ? 1 : 0;
+
+                }else{
+                    SelectedItem.transform.position -= new Vector3(7.7f,0,0);
+                    totalValue -= price;
+                    itemsAtCheckout.Remove(selectedChild);
+
+                    boosterCount -= selectedChild.transform.tag.Contains("Booster") ? 1 : 0;
+
+                }
+
+                if(selectedChild.CompareTag("Card")){
+                    selectedChild.GetComponent<CardController>().basePos = SelectedItem.transform.position;
+                }
+
+                values.SetStage();
+
+                checkoutText.text = $"Checkout: ${totalValue}";
+            break;
+        }
     }
+
+    private void ProcessItems(){
+       
+        foreach(GameObject item in itemsAtCheckout){
+            if(item.transform.CompareTag("Dice")){
+                diceRoller.AddDice(item.GetComponent<DiceRoll>().diceTemplate);
+                itemsAtCheckout.Remove(item.transform.GetChild(0).gameObject);
+                Destroy(item.transform.parent.gameObject);
+            }
+            else if(item.transform.CompareTag("Card")){
+                cardHolder.CardAdded(item.GetComponent<CardController>().cardTemplate);
+                itemsAtCheckout.Remove(item.transform.GetChild(0).gameObject);
+                Destroy(item.transform.parent.gameObject);
+            }
+        }
+        if(boosterCount > 0){
+            ProcessBoosters();
+        }
+    }
+
+    public void ProcessBoosters(){
+        if(boosterCount > 0){
+            if(itemsAtCheckout[0].CompareTag("DiceBooster")){
+                mapEvents.SpawnDiceBox(true);
+            }else if(itemsAtCheckout[0].CompareTag("CardBooster")){
+                mapEvents.SpawnBooster(true);
+                
+            }
+
+            itemsAtCheckout.RemoveAt(0);
+            Destroy(itemsAtCheckout[0].transform.parent.gameObject);
+            boosterCount -= 1;
+        }else{
+            StartCoroutine(gameController.MoveCameraTo(transform.Find("MarketTableView")));
+        }
+        
+        
+    }
+
+
+    
 }
