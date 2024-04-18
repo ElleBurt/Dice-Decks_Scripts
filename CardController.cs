@@ -69,7 +69,7 @@ public class CardController : MonoBehaviour
     }
 
     private void FixedUpdate() {
-        EldritchRageBonus = diceRoller.DiceHeld.Count * 3;
+        EldritchRageBonus = gameController.DiceHeld.Count * 3;
         DefenceForceBonus = gameController.HitsTaken;
         MilitaryInvestmentBonus = gameController.EnemiesKilled * 3;
         PlagueDoctorBonus = Mathf.FloorToInt(gameController.MoneyHeld / 3);

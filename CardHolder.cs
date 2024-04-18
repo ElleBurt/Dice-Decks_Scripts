@@ -9,20 +9,22 @@ public class CardHolder : MonoBehaviour
 {
     
 
-    public List<GameObject> CardsHeld = new List<GameObject>();
+    //public List<GameObject> CardsHeld = new List<GameObject>();
 
     //basics
     private Vector3 spawnPoint;
     public TMP_Text CardCount;
     public int maxCards;
     public float cardWidth;
+    GameController gameController;
 
     public GameObject CardPrefab;
 
     
     void Start()
     {   //sets card count to however many are held
-        CardCount.text = CardsHeld.Count.ToString() + "/" + maxCards.ToString();
+        gameController = FindObjectOfType<GameController>();
+        CardCount.text = gameController.CardsHeld.Count.ToString() + "/" + maxCards.ToString();
         spawnPoint = gameObject.transform.position;
     }
 
@@ -30,12 +32,12 @@ public class CardHolder : MonoBehaviour
     //called when card added to see if too many or not, also make new card and show it and edit text display of how many in hand
     public void CardAdded(CardTemplate cardTemplate){
 
-        if(CardsHeld.Count < maxCards){
+        if(gameController.CardsHeld.Count < maxCards){
             GameObject card = GameObject.Instantiate(CardPrefab, spawnPoint, Quaternion.identity * Quaternion.Euler(-15,-185,0));
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
             card.GetComponent<CardController>().SetupCard();
             card.transform.SetParent(transform);
-            CardsHeld.Add(card);
+            gameController.CardsHeld.Add(card);
             CardsUpdated();
         }
     }
@@ -46,9 +48,9 @@ public class CardHolder : MonoBehaviour
 
     //move cards according to when they should be with new values
     void CardsUpdated(){
-        CardCount.text = CardsHeld.Count.ToString() + "/" + maxCards.ToString();
+        CardCount.text = gameController.CardsHeld.Count.ToString() + "/" + maxCards.ToString();
         int cardNum = 0;
-        foreach(GameObject card in CardsHeld){
+        foreach(GameObject card in gameController.CardsHeld){
 
             Vector3 newPos = new Vector3(spawnPoint.x + (cardNum * cardWidth), spawnPoint.y, spawnPoint.z);
             card.transform.position = newPos;

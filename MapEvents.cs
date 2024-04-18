@@ -86,6 +86,7 @@ public class MapEvents : MonoBehaviour {
 
 
     public IEnumerator SpawnEnemy(int CurrentRound){
+        gameController.changeLights(Color.red);
 
         yield return new WaitForSeconds(1f);
 
@@ -104,7 +105,7 @@ public class MapEvents : MonoBehaviour {
         SpawnMap(ScrollPrefab,template.mapTexture);
 
         Vector3 e_spawnPos = EventSpawn.position + new Vector3(0,50,0);
-        Vector3 s_spawnPos = EventSpawn.position - new Vector3(0,50,0);
+        Vector3 s_spawnPos = e_spawnPos + new Vector3(0,2,0);
 
         GameObject newEnemy = GameObject.Instantiate(template.EnemyPrefab, e_spawnPos, Quaternion.Euler(0,90,0));
 
@@ -145,7 +146,7 @@ public class MapEvents : MonoBehaviour {
         SpawnMap(ScrollPrefab,template.MapMaterial);
 
         Vector3 e_spawnPos = EventSpawn.position + new Vector3(0,50,0) + template.offset;
-        Vector3 s_spawnPos = EventSpawn.position - new Vector3(0,50,0);
+        Vector3 s_spawnPos = EventSpawn.position + new Vector3(0,50,0);
 
 
         if(template.eventPrefab != null){
@@ -243,6 +244,8 @@ public class MapEvents : MonoBehaviour {
     }
 
     public IEnumerator EventEnded(){
+
+        gameController.changeLights(new Color32((byte)255,(byte)196,(byte)76,(byte)255));
 
         if(currentEevnt != null){
             StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position));

@@ -25,7 +25,7 @@ public class DiceRoller : MonoBehaviour
    public GameObject RollButton;
 
    public List<DiceTemplate> DiceBlueprints = new List<DiceTemplate>();
-   public List<GameObject> DiceHeld = new List<GameObject>();
+   //public List<GameObject> DiceHeld = new List<GameObject>();
 
    //Spawn point and forces to apply and direction to apply them
    public Vector3 ForceDirection;
@@ -89,7 +89,7 @@ public class DiceRoller : MonoBehaviour
 
                 diceDisplay.DiceAdded(Dice);
 
-                DiceHeld.Add(Dice);
+                gameController.DiceHeld.Add(Dice);
 
                 slotFound = true;
             }
@@ -165,7 +165,7 @@ public class DiceRoller : MonoBehaviour
     //Coroutine to roll all dice types held
     IEnumerator RollDice(){
 
-        foreach (GameObject dice in DiceHeld){
+        foreach (GameObject dice in gameController.DiceHeld){
 
             string slot = dice.transform.parent.name;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Linq;
 
 public class GameController : MonoBehaviour
 {
@@ -35,6 +36,9 @@ public class GameController : MonoBehaviour
     public List<CardTemplate> CardTemplates = new List<CardTemplate>();
 
     public List<BoosterTemplate> boosters = new List<BoosterTemplate>();
+
+    public List<GameObject> DiceHeld = new List<GameObject>();
+    public List<GameObject> CardsHeld = new List<GameObject>();
 
     
 
@@ -77,11 +81,21 @@ public class GameController : MonoBehaviour
         {Rarity.Uncommon,15},
         {Rarity.Common,0},
     };
+
+    private static readonly Dictionary<Rarity, int> rarityMap = new Dictionary<Rarity, int>{
+        {Rarity.CurrentlyImpossible,1},
+        {Rarity.Legendary,2},
+        {Rarity.Epic,3},
+        {Rarity.Rare,4},
+        {Rarity.Uncommon,5},
+        {Rarity.Common,6},
+    };
     
     //public Dictionary<Rarity,List<CardTemplate>> cardWeights = new Dictionary<Rarity,List<CardTemplate>>();
 
+    public GameObject sceneLights;
 
-    
+    public GameObject coinPrefab;
 
 
     public List<int> diceResults = new List<int>();
@@ -110,6 +124,17 @@ public class GameController : MonoBehaviour
             ItemWeights[template.itemRarity].Item2.Add(template);
         }
 
+        foreach (KeyValuePair<Rarity, (List<DiceTemplate>, List<CardTemplate>) > kvp in ItemWeights){
+             Debug.Log($"Key = {kvp.Key}: ");
+             foreach(DiceTemplate template in kvp.Value.Item1){
+                Debug.Log($"\n {template.name}");
+             }
+             foreach(CardTemplate template in kvp.Value.Item2){
+                Debug.Log($"\n {template.name}");
+             }
+        }
+           
+
     }
 
     public (Rarity, int) RandomItem(string type){
@@ -122,7 +147,7 @@ public class GameController : MonoBehaviour
 
         List<Rarity> rarities = new List<Rarity>();
 
-        foreach(KeyValuePair<Rarity, int> kvp in roundWeights){
+        foreach(KeyValuePair<Rarity, int> kvp in roundWeights.OrderBy(x => x.Value)){
             if(rarityPercent < kvp.Value){
                 break;
             }
@@ -131,11 +156,18 @@ public class GameController : MonoBehaviour
 
         (Rarity, int) item = (Rarity.Common,0);
 
+        rarities = rarities.OrderBy(x => rarityMap[x]).ToList();
+
+
+        Debug.Log(string.Join(", ",rarities));
+
+
 
         if(type == "Dice"){
             foreach(Rarity rarity in rarities){
                 if(ItemWeights[rarity].Item1.Count > 0){
                     item = (rarity,Random.Range(0,ItemWeights[rarity].Item1.Count));
+                    break;
                 }else{
                     continue;
                 }
@@ -144,6 +176,7 @@ public class GameController : MonoBehaviour
             foreach(Rarity rarity in rarities){
                 if(ItemWeights[rarity].Item2.Count > 0){
                     item = (rarity,Random.Range(0,ItemWeights[rarity].Item2.Count));
+                    break;
                 }else{
                     continue;
                 }
@@ -160,7 +193,7 @@ public class GameController : MonoBehaviour
             bool corrupt = false;
             GameObject cardTriggered = null;
 
-            foreach(GameObject card in cardHolder.CardsHeld){
+            foreach(GameObject card in CardsHeld){
                 if(card.GetComponent<CardController>().cardType == CardType.CorruptCoins){
                     corrupt = true;
                     cardTriggered = card;
@@ -178,12 +211,54 @@ public class GameController : MonoBehaviour
                 moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) + toAdd}";
                 MoneyHeld = int.Parse(moneyText.text.Substring(1));
             }
+
+            foreach(GameObject coinSpawn in GameObject.FindGameObjectsWithTag("CoinSpawn")){
+                StartCoroutine(dropCoins(ammount, coinSpawn));
+            }
         }else{
             moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) - ammount}";
             MoneyHeld = int.Parse(moneyText.text.Substring(1));
+
         }
         
 
+        
+    }
+
+    private IEnumerator dropCoins(int ammount, GameObject coinSpawn){
+        for(int i = 0; i < ammount; i++){
+            GameObject coin = GameObject.Instantiate(coinPrefab, coinSpawn.transform.position, Quaternion.identity);
+            coin.transform.parent = coinSpawn.transform;
+            yield return new WaitForSeconds(0.2f);
+            Destroy(coin, 0.5f);
+        }
+    }
+
+    public void changeLights(Color newCol){
+         
+        foreach(Transform light in sceneLights.transform){
+            
+            Color Starter = light.gameObject.GetComponent<Light>().color;
+            Color AimCol = newCol;
+
+            StartCoroutine(lerpLights(light,Starter,AimCol));
+        }
+    }
+
+    private IEnumerator lerpLights(Transform light, Color Start, Color newCol){
+
+         float timeElapsed = 0f;
+         float duration = 2f;
+
+        while(timeElapsed < duration){
+
+            light.gameObject.GetComponent<Light>().color = Color.Lerp(Start,newCol, timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+
+        }
+
+        light.gameObject.GetComponent<Light>().color = newCol;
         
     }
     
@@ -196,9 +271,11 @@ public class GameController : MonoBehaviour
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
         mapEvents = FindObjectOfType<MapEvents>();
         cardHolder = FindObjectOfType<CardHolder>();
-        scoreCards = FindObjectOfType<ScoreCards>();
-    }
+        scoreCards = FindObjectOfType<ScoreCards>(); 
 
+        
+    }
+ 
     //spawns in the starter dice and scroll, Generates map and moves camera to map. sets last icon to start icon
     void GameStarted(){
         CurrentHealth = 0;

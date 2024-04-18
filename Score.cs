@@ -78,7 +78,7 @@ public class Score : MonoBehaviour
 
             bool allRollsFinished = true;
 
-            foreach(GameObject die in diceRoller.DiceHeld){
+            foreach(GameObject die in gameController.DiceHeld){
                 
                 if (!die.GetComponent<DiceRoll>().accountedFor){
 
@@ -128,7 +128,7 @@ public class Score : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         //orders the dice by which effect they have
-        List<GameObject> OrderedList = diceRoller.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
+        List<GameObject> OrderedList = gameController.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
 
         //goes through list and gets SO values
         foreach(GameObject dice in OrderedList){
@@ -167,7 +167,7 @@ public class Score : MonoBehaviour
 
     //moves dice to respective positions in the dice holder
     public IEnumerator ReturnDice(){
-        foreach(GameObject dice in diceRoller.DiceHeld){
+        foreach(GameObject dice in gameController.DiceHeld){
 
             string slot = dice.transform.parent.name;
 

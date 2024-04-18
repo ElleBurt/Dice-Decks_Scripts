@@ -12,8 +12,12 @@ public class CardHover : MonoBehaviour, GetValues
     private GameObject openDesc;
     CardTemplate cardTemplate;
 
+    [Range(0f, 1f)]
     public float scaleFactor = 1.0f;
+    [Range(0f, 1f)]
     public float offsetFactor = 1.0f;
+    [Range(0f, 1f)]
+    public float offsetDescFactor = 1.0f;
 
     public bool boosterCard = false;
     bool isAwake = false;
@@ -48,13 +52,12 @@ public class CardHover : MonoBehaviour, GetValues
     void OnMouseEnter(){
         
         if(transform.childCount > 0){
-            Vector3 pos = transform.GetChild(0).gameObject.GetComponent<CardController>().basePos;
-            transform.GetChild(0).position = pos + new Vector3(0,1,0);
+            transform.GetChild(0).position = transform.position + new Vector3(0, 2*offsetFactor, 0);
 
             if(openDesc == null && !boosterCard){
                 
                 cardTemplate = transform.GetChild(0).gameObject.GetComponent<CardController>().cardTemplate;
-                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5.5f*offsetFactor,0)),Quaternion.Euler(Vector3.zero));
+                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5.5f*offsetDescFactor,0)),Quaternion.Euler(Vector3.zero));
 
                 Desc.transform.localScale *= scaleFactor;
 
@@ -74,8 +77,7 @@ public class CardHover : MonoBehaviour, GetValues
     }
     void OnMouseExit(){
         if(transform.childCount > 0){
-            Vector3 pos = transform.GetChild(0).gameObject.GetComponent<CardController>().basePos;
-            transform.GetChild(0).position = pos;
+            transform.GetChild(0).position = transform.position;
         }
         if(openDesc != null){
             Destroy(openDesc);

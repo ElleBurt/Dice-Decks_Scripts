@@ -73,7 +73,7 @@ public class ScoreCards : MonoBehaviour
 
         diceFaceValues = diceValues;
 
-        foreach(GameObject card in cardHolder.CardsHeld){
+        foreach(GameObject card in gameController.CardsHeld){
 
             CardController controller = card.GetComponent<CardController>();
             CardType cardType = controller.cardType;
@@ -109,7 +109,7 @@ public class ScoreCards : MonoBehaviour
     }
 
     private void HighRoller(CardController controller, GameObject card){
-        foreach(GameObject dice in diceRoller.DiceHeld){
+        foreach(GameObject dice in gameController.DiceHeld){
 
             int num;
 
@@ -139,7 +139,7 @@ public class ScoreCards : MonoBehaviour
     }
 
     private void RollingRich(CardController controller, GameObject card){
-        foreach(GameObject dice in diceRoller.DiceHeld){
+        foreach(GameObject dice in gameController.DiceHeld){
 
             int num;
 
@@ -175,7 +175,7 @@ public class ScoreCards : MonoBehaviour
 
     public void ScoreAnim(CardType type){
         
-        foreach(GameObject card in cardHolder.CardsHeld){
+        foreach(GameObject card in gameController.CardsHeld){
             if(card.GetComponent<CardController>().cardType == type){
                 StartCoroutine(card.GetComponent<CardController>().ScoreCard());
             }

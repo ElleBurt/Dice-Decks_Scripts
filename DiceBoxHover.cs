@@ -12,8 +12,14 @@ public class DiceBoxHover : MonoBehaviour, GetValues
     DiceRoller diceRoller;
     public bool hovered = false;
     public GameObject ItemDesc;
+    
+    
+    [Range(0f, 1f)]
     public float scaleFactor = 1.0f;
+    [Range(0f, 1f)]
     public float offsetFactor = 1.0f;
+    [Range(0f, 1f)]
+    public float offsetDescFactor = 1.0f;
 
     public bool inCheckout = false;
     public bool marketDice = false;
@@ -40,13 +46,13 @@ public class DiceBoxHover : MonoBehaviour, GetValues
 
 
     private void OnMouseEnter() {
-        if(animFin){
+        if(animFin && transform.childCount > 0){
             transform.GetChild(0).position = transform.position + new Vector3(0, 2*offsetFactor, 0);
             hovered = true;
 
             if(openDesc == null){
 
-                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5.5f*offsetFactor,0)),Quaternion.Euler(Vector3.zero));
+                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5.5f*offsetDescFactor,0)),Quaternion.Euler(Vector3.zero));
 
                 Desc.transform.localScale *= scaleFactor;
 
@@ -82,7 +88,7 @@ public class DiceBoxHover : MonoBehaviour, GetValues
         
     }
     private void OnMouseExit() {
-        if(animFin){
+        if(animFin && transform.childCount > 0){
             transform.GetChild(0).position = transform.position ;
             hovered = false;
         }
