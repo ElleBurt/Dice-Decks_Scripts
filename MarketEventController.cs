@@ -47,7 +47,7 @@ public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHa
         SpawnCards();
         SpawnBoosters();
         updateInventory();
-        StartCoroutine(gameController.MoveCameraTo(transform.Find("MarketTableView")));
+        gameController.MoveCameraTo(transform.Find("MarketTableView"),Vector3.zero);
     }
 
     private void SpawnDice(){
@@ -149,7 +149,7 @@ public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHa
             break;
 
             case "CowBell":
-                StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
+                gameController.MoveCameraTo(gameController.DiceView,Vector3.zero);
                 StartCoroutine(mapEvents.EventEnded());
             break;
 
@@ -244,7 +244,7 @@ public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHa
 
             boosterCount -= 1;
         }else{
-            StartCoroutine(gameController.MoveCameraTo(transform.Find("MarketTableView")));
+            gameController.MoveCameraTo(transform.Find("MarketTableView"),Vector3.zero);
             itemsAtCheckout = new List<GameObject>{};
         }
 
@@ -277,9 +277,9 @@ public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHa
 
     public void MoveToSellBoard(bool isAtBoard){
         if(isAtBoard){
-            StartCoroutine(gameController.MoveCameraTo(transform.Find("SellBoardView")));
+           gameController.MoveCameraTo(transform.Find("SellBoardView"),Vector3.zero);
         }else{
-            StartCoroutine(gameController.MoveCameraTo(transform.Find("MarketTableView")));
+           gameController.MoveCameraTo(transform.Find("MarketTableView"),Vector3.zero);
         }
         
     }

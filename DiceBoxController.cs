@@ -52,7 +52,7 @@ public class DiceBoxController : MonoBehaviour
                 }
             }
         }
-        StartCoroutine(gameController.DiceViewAnim());
+        gameController.MoveCameraTo(GameObject.FindGameObjectsWithTag("DiceTrayView")[0].transform,Vector3.zero);
     }
 
     public void closeBox(Transform child){

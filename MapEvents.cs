@@ -56,13 +56,13 @@ public class MapEvents : MonoBehaviour {
     }
 
     public void SpawnBooster(bool fromMarket){
-        StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
+        gameController.MoveCameraTo(gameController.DiceView,Vector3.zero);
         GameObject cardPack = GameObject.Instantiate(CardPack, BoosterSpawnPosition, Quaternion.identity * Quaternion.Euler(0,270,0));
         cardPack.GetComponent<CardBoosterController>().wasBrought = fromMarket;
     }
 
     public void SpawnDiceBox(bool fromMarket){
-        StartCoroutine(gameController.MoveCameraTo(gameController.DiceView));
+        gameController.MoveCameraTo(gameController.DiceView,Vector3.zero);
         GameObject diceBox = GameObject.Instantiate(DiceBox, DiceBagSpawnPosition, Quaternion.identity * Quaternion.Euler(0,90,0));
         diceBox.GetComponent<DiceBoxController>().wasBrought = fromMarket;
     }

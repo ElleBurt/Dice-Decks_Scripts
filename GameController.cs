@@ -284,7 +284,7 @@ public class GameController : MonoBehaviour
         Scroll = GameObject.Instantiate(ScrollPre, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
         genMap.IconGeneration();
-        StartCoroutine(MapViewAnim());
+        MoveCameraTo(lastIconTransform,new Vector3(0,13,-5));
 
         
     }
@@ -313,7 +313,7 @@ public class GameController : MonoBehaviour
         Scroll = GameObject.Instantiate(ScrollPre, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
         genMap.displayIcons(true);
-        StartCoroutine(MapViewAnim());
+        MoveCameraTo(lastIconTransform,new Vector3(0,13,-5));
     }
 
     public void UpdateHealth(float ChangeFactor, bool Damaged){
@@ -370,7 +370,7 @@ public class GameController : MonoBehaviour
 
         yield return new WaitForSeconds(1.5f);
 
-        StartCoroutine(DiceViewAnim());
+        MoveCameraTo(GameObject.FindGameObjectsWithTag("DiceTrayView")[0].transform,Vector3.zero);
         atkCardHolder.ReplenishCards();
 
         yield return new WaitForSeconds(1f);
@@ -470,39 +470,53 @@ public class GameController : MonoBehaviour
         Destroy(PlayerToken);
     }
     
-    //moves camera to the map
-    public IEnumerator MapViewAnim(){
+
+
+
+
+
+    // Camera Functions
+    public Coroutine cameraMove;
+
+
+    private IEnumerator MoveCamera(Transform newView, Vector3 offset){
+
+        cameraAlignedToMap = false;
         cameraAlignedToDice = false;
-        yield return new WaitForSeconds(2f);
-        while(Vector3.Distance(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,13,-5)) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, lastIconTransform.position + new Vector3(0,13,-5), cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(48f,0f,0f), cameraMoveSpeed * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
+        
+        Vector3 targetPos = newView.position + offset;
+        Quaternion rotation = Quaternion.Euler(0f,0f,0f);
+
+
+        if(newView.CompareTag("MapIcon") || newView.CompareTag("Start")){
+            yield return new WaitForSeconds(2f);
+            rotation = Quaternion.Euler(48f,0,0);
+        }else{
+            rotation = newView.rotation;
         }
-        StartCoroutine(DropPlayerToken());
+
+        
+        yield return new WaitForSeconds(0.1f);
+        while(Vector3.Distance(mainCamera.transform.position, targetPos) > 0.1f){
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, targetPos, cameraMoveSpeed * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,rotation, cameraMoveSpeed * Time.deltaTime);
+            yield return null;
+        }
+
+        if(newView.CompareTag("DiceTrayView")){
+            cameraAlignedToDice = true;
+            Destroy(Scroll, 1f);
+        }else if(newView.CompareTag("MapIcon") || newView.CompareTag("Start")){
+            StartCoroutine(DropPlayerToken());
+        }
     }
 
-    //moves camera to the dice tray
-    public IEnumerator DiceViewAnim(){
-        cameraAlignedToMap = false;
-        yield return new WaitForSeconds(0.1f);
-        while(Vector3.Distance(mainCamera.transform.position, DiceView.position) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, DiceView.position, cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,Quaternion.Euler(24.4f,0f,0f), cameraMoveSpeed * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
+    public void MoveCameraTo(Transform newView,Vector3 offset){
+        if(cameraMove != null){
+            StopCoroutine(cameraMove);
+            cameraMove = null;
         }
-        cameraAlignedToDice = true;
-        Destroy(Scroll, 1f);
-    }
-
-    public IEnumerator MoveCameraTo(Transform newView){
-        cameraAlignedToMap = false;
-        yield return new WaitForSeconds(0.1f);
-        while(Vector3.Distance(mainCamera.transform.position, newView.position) > 0.1f){
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, newView.position, cameraMoveSpeed * Time.deltaTime);
-            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation ,newView.rotation, cameraMoveSpeed * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
-        }
+        cameraMove = StartCoroutine(MoveCamera(newView,offset));
     }
    
 
