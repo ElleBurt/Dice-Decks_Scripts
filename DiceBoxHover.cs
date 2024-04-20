@@ -21,10 +21,11 @@ public class DiceBoxHover : MonoBehaviour, GetValues
     [Range(0f, 1f)]
     public float offsetDescFactor = 1.0f;
 
-    public bool inCheckout = false;
+    public bool inSellBox = false;
     public bool marketDice = false;
+   
     
-    DiceTemplate dt;
+    public DiceTemplate dt;
 
     private GameObject openDesc;
 
@@ -32,12 +33,14 @@ public class DiceBoxHover : MonoBehaviour, GetValues
         diceRoller = FindObjectOfType<DiceRoller>();
     }
 
-    public bool GetStage(){
-        return inCheckout;
+    public MarketStage currentStage = MarketStage.None;
+
+    public MarketStage GetStage(){
+        return currentStage;
     }
 
-    public void SetStage(){
-        inCheckout = !inCheckout;
+    public void SetStage(MarketStage stage){
+        currentStage = stage;
     }
 
     public Dictionary<string, float> GetValuesAvailable(){
@@ -88,7 +91,7 @@ public class DiceBoxHover : MonoBehaviour, GetValues
         
     }
     private void OnMouseExit() {
-        if(animFin && transform.childCount > 0){
+        if(animFin && transform.childCount > 0 && !inSellBox){
             transform.GetChild(0).position = transform.position ;
             hovered = false;
         }

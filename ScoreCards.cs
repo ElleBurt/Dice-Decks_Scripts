@@ -37,8 +37,7 @@ public class ScoreCards : MonoBehaviour
             {CardType.Jinx, Jinx},
             {CardType.FizzBuzz, FizzBuzz},
             //{CardType.PlagueDoctor, PlagueDoctor},
-            {CardType.EldritchRage, EldritchRage},
-            //{CardType.StrengthRitual, StrengthRitual},
+            
         };
 
         ignoreCardTypes = new List<CardType>{
@@ -47,7 +46,8 @@ public class ScoreCards : MonoBehaviour
             {CardType.Economics},
             {CardType.MilitaryInvestment},
             {CardType.DefenceForce},
-
+            {CardType.EldritchRage},
+            {CardType.StrengthRitual},
             
         };
 
@@ -87,6 +87,7 @@ public class ScoreCards : MonoBehaviour
             if(!ignoreCardClass.Contains(cardClass)){
                 EffectProcesses[cardClass](controller,card);
             }
+
             StartCoroutine(CardTriggered(card));
             yield return new WaitForSeconds(0.75f);
         }
@@ -166,9 +167,7 @@ public class ScoreCards : MonoBehaviour
         }
     }
 
-    private void EldritchRage(CardController controller, GameObject card){
-        controller.AdditionValue = 4 * diceFaceValues.Count;
-    }
+
 
 
     //-----These Are Triggered Or Updated By External Actions-----
@@ -215,11 +214,7 @@ public class ScoreCards : MonoBehaviour
     }
 
     private void BloodShard(CardController controller, GameObject card){
-        controller.BloodShardCount -= 1;
-
-        if(controller.BloodShardCount == 0){
-            controller.cardDestroyed();
-        }
+        controller.BloodShardTick(true);
     }
 
     private void Shield(CardController controller, GameObject card){

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Text.RegularExpressions;
 
 
 
@@ -46,7 +47,7 @@ public class CardController : MonoBehaviour
 
 
     //card Vals
-    private int EldritchRageBonus, DefenceForceBonus, PlagueDoctorBonus, MilitaryInvestmentBonus, EconomicsBonus;
+    private int EldritchRageBonus, DefenceForceBonus, PlagueDoctorBonus, MilitaryInvestmentBonus, EconomicsBonus, StrengthRitualBonus;
     
     
 
@@ -70,6 +71,7 @@ public class CardController : MonoBehaviour
 
     private void FixedUpdate() {
         EldritchRageBonus = gameController.DiceHeld.Count * 3;
+        StrengthRitualBonus = gameController.DiceHeld.Count * 6;
         DefenceForceBonus = gameController.HitsTaken;
         MilitaryInvestmentBonus = gameController.EnemiesKilled * 3;
         PlagueDoctorBonus = Mathf.FloorToInt(gameController.MoneyHeld / 3);
@@ -78,21 +80,30 @@ public class CardController : MonoBehaviour
         switch(cardTemplate.cardType){
             case CardType.EldritchRage:
                 additionText.text = $"+{EldritchRageBonus}";
+                AdditionValue = EldritchRageBonus;
             break;
 
             case CardType.DefenceForce:
                 additionText.text  = $"+{DefenceForceBonus}";
+                AdditionValue = DefenceForceBonus;
             break;
 
             case CardType.MilitaryInvestment:
                 additionText.text  = $"+{MilitaryInvestmentBonus}";
+                AdditionValue = MilitaryInvestmentBonus;
             break;
 
             case CardType.PlagueDoctor:
             break;
 
+            case CardType.StrengthRitual:
+                additionText.text = $"+{StrengthRitualBonus}";
+                AdditionValue = StrengthRitualBonus;
+            break;
+
             case CardType.Economics:
                 sellText.text = $"${cardTemplate.baseSellValue + EconomicsBonus}";
+                SellValue = cardTemplate.baseSellValue + EconomicsBonus;
             break;
 
             default:
@@ -101,6 +112,14 @@ public class CardController : MonoBehaviour
 
     }
 
+    public void BloodShardTick(bool isDown){
+        BloodShardCount = isDown ? BloodShardCount - 1 : BloodShardCount + 1;
+        if(BloodShardCount == 0){
+            Destroy(gameObject,1f);
+        }
+        descriptionText.text = Regex.Replace(descriptionText.text.ToString(), @"\[[x|\d+]\]",$"[{BloodShardCount}]");
+
+    }
    
 
     public void SetupCard(){
@@ -118,6 +137,7 @@ public class CardController : MonoBehaviour
         if(cardTemplate.cardClass == CardClass.BloodShard){
             BloodShardCount = 5;
             cardMat.SetFloat("_isCursed",1f);
+            descriptionText.text = Regex.Replace(descriptionText.text.ToString(), @"\[[x|\d+]\]",$"[{BloodShardCount}]");
         }
 
         if(cardTemplate.cardClass == CardClass.Cursed){
@@ -210,7 +230,4 @@ public class CardController : MonoBehaviour
         isMoving = false;
     }
 
-    public void cardDestroyed(){
-        Destroy(gameObject,1);
-    }
 }

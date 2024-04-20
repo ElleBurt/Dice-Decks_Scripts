@@ -4,10 +4,16 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
+public enum MarketStage{
+    None,
+    InCheckout,
+    OnStand,
+    AtSellBoard,
+}
 public interface GetValues{
     public Dictionary<string, float> GetValuesAvailable();
-    public bool GetStage();
-    public void SetStage();
+    public MarketStage GetStage();
+    public void SetStage(MarketStage stage);
 }
 
 public class BoosterHover : MonoBehaviour, GetValues
@@ -19,18 +25,14 @@ public class BoosterHover : MonoBehaviour, GetValues
     public float scaleFactor = 1.0f;
     public float offsetFactor = 1.0f;
 
-    public bool inCheckout = false;
+    public MarketStage currentStage = MarketStage.None;
 
-    void OnMouseDown(){
-
+    public MarketStage GetStage(){
+        return currentStage;
     }
 
-    public bool GetStage(){
-        return inCheckout;
-    }
-
-    public void SetStage(){
-        inCheckout = !inCheckout;
+    public void SetStage(MarketStage stage){
+        currentStage = stage;
     }
 
     public Dictionary<string, float> GetValuesAvailable(){

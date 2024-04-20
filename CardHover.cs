@@ -10,7 +10,7 @@ public class CardHover : MonoBehaviour, GetValues
 
     public GameObject ItemDesc;
     private GameObject openDesc;
-    CardTemplate cardTemplate;
+    public CardTemplate cardTemplate;
 
     [Range(0f, 1f)]
     public float scaleFactor = 1.0f;
@@ -21,8 +21,9 @@ public class CardHover : MonoBehaviour, GetValues
 
     public bool boosterCard = false;
     bool isAwake = false;
+    public bool inSellBox = false;
 
-    public bool inCheckout = false;
+    public MarketStage currentStage = MarketStage.None;
 
     public void OnMouseDown()
     {
@@ -33,12 +34,12 @@ public class CardHover : MonoBehaviour, GetValues
         
     }
 
-    public bool GetStage(){
-        return inCheckout;
+    public MarketStage GetStage(){
+        return currentStage;
     }
 
-    public void SetStage(){
-        inCheckout = !inCheckout;
+    public void SetStage(MarketStage stage){
+        currentStage = stage;
     }
 
     public Dictionary<string, float> GetValuesAvailable(){
@@ -76,7 +77,7 @@ public class CardHover : MonoBehaviour, GetValues
        
     }
     void OnMouseExit(){
-        if(transform.childCount > 0){
+        if(transform.childCount > 0 && !inSellBox){
             transform.GetChild(0).position = transform.position;
         }
         if(openDesc != null){

@@ -208,26 +208,38 @@ public class GameController : MonoBehaviour
                     scoreCards.ScoreAnim(CardType.CorruptCoins);
                 }
                 
-                moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) + toAdd}";
-                MoneyHeld = int.Parse(moneyText.text.Substring(1));
+                foreach(GameObject MoneyText in GameObject.FindGameObjectsWithTag("MoneyText")){
+                    TMP_Text textElem = MoneyText.GetComponent<TMP_Text>();
+                    textElem.text = $"${int.Parse(textElem.text.Substring(1)) + toAdd}";
+                    MoneyHeld = int.Parse(textElem.text.Substring(1));
+                }
+                
             }
 
             foreach(GameObject coinSpawn in GameObject.FindGameObjectsWithTag("CoinSpawn")){
-                StartCoroutine(dropCoins(ammount, coinSpawn));
+                if(coinSpawn.transform.parent.name == "MarketStand(Clone)"){
+                    StartCoroutine(dropCoins(ammount, coinSpawn, 0.5f));
+                }else{
+                    StartCoroutine(dropCoins(ammount, coinSpawn, 1f));
+                }
+                
             }
         }else{
-            moneyText.text = $"${int.Parse(moneyText.text.Substring(1)) - ammount}";
-            MoneyHeld = int.Parse(moneyText.text.Substring(1));
-
+            foreach(GameObject MoneyText in GameObject.FindGameObjectsWithTag("MoneyText")){
+                TMP_Text textElem = MoneyText.GetComponent<TMP_Text>();
+                textElem.text = $"${int.Parse(textElem.text.Substring(1)) - ammount}";
+                MoneyHeld = int.Parse(textElem.text.Substring(1));
+            }
         }
         
 
         
     }
 
-    private IEnumerator dropCoins(int ammount, GameObject coinSpawn){
+    private IEnumerator dropCoins(int ammount, GameObject coinSpawn, float scaleFactor){
         for(int i = 0; i < ammount; i++){
             GameObject coin = GameObject.Instantiate(coinPrefab, coinSpawn.transform.position, Quaternion.identity);
+            coin.transform.localScale *= scaleFactor;
             coin.transform.parent = coinSpawn.transform;
             yield return new WaitForSeconds(0.2f);
             Destroy(coin, 0.5f);
