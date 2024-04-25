@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class MiniScript : MonoBehaviour
 {
-    private bool hovered = false;
     public bool selected = false;
 
     public EnemyTemplate enemyTemplate;
@@ -14,30 +15,42 @@ public class MiniScript : MonoBehaviour
 
     private GameObject Health;
 
-    private delegate bool Comparison(float CurrentHealthVolume, float NewHealthVolume);
-
     MapEvents mapEvents;
     public int TickDamage;
     public string EffectInflicted;
+
+    private GameObject UI;
+    private GameObject healthBar;
+    private Slider slider;
+    private TMP_Text textName;
+    private TMP_Text healthStats;
 
     // Start is called before the first frame update
     void Awake()
     {
         mapEvents = FindObjectOfType<MapEvents>();
-        Health = transform.Find("Vile").Find("Health").gameObject;
+        UI = transform.Find("EnemyInfo").gameObject;
+        textName = UI.transform.Find("Name").gameObject.GetComponent<TMP_Text>();
+        healthBar = UI.transform.Find("HealthBar").gameObject;
+        slider = healthBar.GetComponent<Slider>();
+        healthStats = healthBar.transform.Find("healthStats").gameObject.GetComponent<TMP_Text>();
+
     }
 
     public void SetupMini(){
         CurrentHealth = enemyTemplate.MaxHealth;
         MaxHealth = enemyTemplate.MaxHealth;
+        slider.maxValue = MaxHealth;
+        slider.value = MaxHealth;
+        textName.text = enemyTemplate.name;
+        healthStats.text = $"{CurrentHealth} / {MaxHealth}";
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(hovered && Input.GetMouseButtonDown(0)){
-            mapEvents.SelectMiniToAttack(gameObject);
-        }
+        
+
     }
 
     public void TickDamageInflicted(){
@@ -47,53 +60,35 @@ public class MiniScript : MonoBehaviour
         }
     }
 
-    void OnMouseOver(){
-        hovered = true;
-    }
-    void OnMouseExit(){
-        hovered = false;
+    
+    void OnMouseDown(){
+        mapEvents.SelectMiniToAttack(gameObject);
     }
 
     public void UpdateHealth(float ChangeFactor, bool Damaged){
 
         //ternary opperator for knowing if to add or subtract health
         float NewHealth = Damaged ? CurrentHealth -= ChangeFactor : CurrentHealth += ChangeFactor;
-
-        float MinVileValue = 2.1f;
-        float MaxVileValue = -0.5f;
-        float HealthPercentile = NewHealth / MaxHealth;
-        
-
-        float CurrentHealthVolume = Health.GetComponent<Liquid>().fillAmount;
-        float NewHealthVolume = MinVileValue + (MaxVileValue - MinVileValue) * HealthPercentile;
-        
-        //HealthText.text = MaxHealth.ToString() + "/" + NewHealth.ToString();
-
-        if(CurrentHealth <= 0){
+        StartCoroutine(HealthAnim(NewHealth));
+        if(NewHealth <= 0){
             mapEvents.SelectedMiniDied = true;
         }
-
+        CurrentHealth = NewHealth;
+        healthStats.text = $"{CurrentHealth} / {MaxHealth}";
         
-
-        if(Damaged){
-            StartCoroutine(AnimHealth((CurrentHealthVolume, NewHealthVolume) => CurrentHealthVolume < NewHealthVolume, CurrentHealthVolume, NewHealthVolume, true));
-        }else{
-            StartCoroutine(AnimHealth((CurrentHealthVolume, NewHealthVolume) => CurrentHealthVolume > NewHealthVolume, CurrentHealthVolume, NewHealthVolume, false));
-        }
-
-       
     }
 
-    private IEnumerator AnimHealth(Comparison comp, float CurrentHealthVolume, float NewHealthVolume, bool Damaged){
+    private IEnumerator HealthAnim(float NewHealth){
 
-        while(comp(CurrentHealthVolume,NewHealthVolume)){
+        float timeElapsed = 0;
+        float duration = 2f;
 
-            CurrentHealthVolume = Damaged ? CurrentHealthVolume + 0.1f : CurrentHealthVolume - 0.1f;
-
-            Health.GetComponent<Liquid>().fillAmount = CurrentHealthVolume;
-
+        while(timeElapsed < duration){
+            slider.value = Mathf.Lerp(slider.value, NewHealth,timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
             yield return null;
-
         }
     }
+
+    
 }

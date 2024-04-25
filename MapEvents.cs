@@ -104,22 +104,25 @@ public class MapEvents : MonoBehaviour {
 
         SpawnMap(ScrollPrefab,template.mapTexture);
 
-        Vector3 e_spawnPos = EventSpawn.position + new Vector3(0,50,0);
+        Vector3 e_spawnPos = EventSpawn.position + new Vector3(0,52,0);
         Vector3 s_spawnPos = e_spawnPos + new Vector3(0,2,0);
 
-        GameObject newEnemy = GameObject.Instantiate(template.EnemyPrefab, e_spawnPos, Quaternion.Euler(0,90,0));
-
-        GameObject newScene = GameObject.Instantiate(template.ScenePrefab, s_spawnPos, Quaternion.identity);
-        currentScene = newScene;
+        GameObject newEnemy = GameObject.Instantiate(template.EnemyPrefab, e_spawnPos, Quaternion.Euler(0,270,0));
+        StartCoroutine(DropEvent(newEnemy, e_spawnPos));
+        
+        
+        if(template.ScenePrefab != null){
+            GameObject newScene = GameObject.Instantiate(template.ScenePrefab, s_spawnPos, Quaternion.identity);
+            currentScene = newScene;
+            StartCoroutine(DropEvent(newScene, s_spawnPos));
+        }
+        
 
         MiniScript enemyScript = newEnemy.GetComponent<MiniScript>();
 
         enemyScript.enemyTemplate = template;
 
         enemyScript.SetupMini();
-
-        StartCoroutine(DropEvent(newEnemy, e_spawnPos));
-        StartCoroutine(DropEvent(newScene, s_spawnPos));
 
         yield return new WaitForSeconds(2f);
 
