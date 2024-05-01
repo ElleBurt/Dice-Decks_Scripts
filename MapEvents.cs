@@ -32,6 +32,8 @@ public class MapEvents : MonoBehaviour {
     public bool SelectedMiniDied = false;
     private GenMap genMap;
     private GameObject activeSword;
+
+    
     
 
 
@@ -95,7 +97,7 @@ public class MapEvents : MonoBehaviour {
         List<EnemyTemplate> tempList = new List<EnemyTemplate>();
 
         foreach(EnemyTemplate Enemy in enemyTemplates){
-            if(isInRange(CurrentRound,Enemy.encouterRows.x,Enemy.encouterRows.y)){
+            if(isInRange(CurrentRound, Enemy.enemyDiff)){
                 tempList.Add(Enemy);
             }
         }
@@ -105,7 +107,7 @@ public class MapEvents : MonoBehaviour {
         SpawnMap(ScrollPrefab,template.mapTexture);
 
         Vector3 e_spawnPos = EventSpawn.position + new Vector3(0,52,0);
-        Vector3 s_spawnPos = e_spawnPos + new Vector3(0,2,0);
+        Vector3 s_spawnPos = e_spawnPos;
 
         GameObject newEnemy = GameObject.Instantiate(template.EnemyPrefab, e_spawnPos, Quaternion.Euler(0,270,0));
         StartCoroutine(DropEvent(newEnemy, e_spawnPos));
@@ -136,8 +138,18 @@ public class MapEvents : MonoBehaviour {
         }
     }
 
-    private static bool isInRange(int currentRound, float minRange, float maxRange){
-        return currentRound >= minRange && currentRound <= maxRange;
+
+
+    private static bool isInRange(int currentRound, EnemyDiff enemyDiff){
+        if(currentRound < 5 && enemyDiff == EnemyDiff.Easy){
+            return true;
+        }else if(currentRound > 4 && currentRound < 9 && enemyDiff == EnemyDiff.Medium){
+            return true;
+        }else if(currentRound > 8 && currentRound < 15 && enemyDiff == EnemyDiff.Hard){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 

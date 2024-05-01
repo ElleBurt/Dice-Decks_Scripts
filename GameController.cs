@@ -415,6 +415,10 @@ public class GameController : MonoBehaviour
                 mapEvents.SpawnDiceBox(false);
             break;
 
+            case "Boss":
+                //mapEvents.SpawnDiceBox(false);
+            break;
+
             default:
 
                 foreach(MapEventTemplate eventTemplate in Events){
