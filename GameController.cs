@@ -301,8 +301,9 @@ public class GameController : MonoBehaviour
         
     }
 
-    float cameraZmin = 6;
+    float cameraZmin = -22;
     float cameraZmax = 45;
+    Coroutine cameraMovingFromScroll;
     //temp key press to start game
     void Update()
     {
@@ -311,13 +312,47 @@ public class GameController : MonoBehaviour
         }
         if(cameraAlignedToMap){
             Vector3 pos = mainCamera.transform.position;
-            pos.z += Input.mouseScrollDelta.y;
+            pos.z += Input.mouseScrollDelta.y*1.25f;
 
 
             if(pos.z > cameraZmin && pos.z < cameraZmax){
-                mainCamera.transform.position = pos;
+                if(Input.mouseScrollDelta.y < 0 && pos.z < 0){
+
+                    if(cameraMovingFromScroll != null){
+                        StopCoroutine(cameraMovingFromScroll);
+                        cameraMovingFromScroll = null;
+                    }
+
+                    cameraMovingFromScroll = StartCoroutine(movingFromMap(new Vector3(107.68f,35.79f,-20.92f), Quaternion.Euler(18.7f,0,0)));
+
+                }else if(Input.mouseScrollDelta.y > 0 && pos.z < 0){
+
+                    if(cameraMovingFromScroll != null){
+                        StopCoroutine(cameraMovingFromScroll);
+                        cameraMovingFromScroll = null;
+                    }
+
+                    cameraMovingFromScroll = StartCoroutine(movingFromMap(lastIconTransform.position + new Vector3(0,13,-5), Quaternion.Euler(48f,0,0)));
+                }else{
+                    mainCamera.transform.position = pos;
+                }
+
+                
             }
         }
+    }
+
+    private IEnumerator movingFromMap(Vector3 TargetPos, Quaternion TargetRot){
+        float timeElapsed = 0f;
+        float duration = 2f;
+
+        while(timeElapsed < duration){
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, TargetRot, timeElapsed / duration);
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, TargetPos, timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+        
     }
 
     public void RoundConclusion(){
