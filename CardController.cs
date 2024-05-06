@@ -4,11 +4,12 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Text.RegularExpressions;
+using UnityEngine.EventSystems;
 
 
 
 
-public class CardController : MonoBehaviour
+public class CardController : MonoBehaviour, IPointerClickHandler
 {
     public GameController gameController;
     public CardTemplate cardTemplate;
@@ -45,11 +46,17 @@ public class CardController : MonoBehaviour
     public bool canPickup = false;
     public bool boosterCard = false;
 
+    private bool clicked = false;
+
 
     //card Vals
     private int EldritchRageBonus, DefenceForceBonus, PlagueDoctorBonus, MilitaryInvestmentBonus, EconomicsBonus, StrengthRitualBonus;
     
-    
+    public ObjectState state = ObjectState.None;
+
+    public float offsetFactor = 1.0f;
+
+    CardHolder cardHolder;
 
 
     void Awake(){
@@ -59,7 +66,7 @@ public class CardController : MonoBehaviour
         descriptionText = transform.GetChild(0).Find("Info").GetComponent<TMP_Text>();
         additionText = transform.GetChild(0).Find("Additional").GetComponent<TMP_Text>();
         multiText = transform.GetChild(0).Find("Multiplier").GetComponent<TMP_Text>();
-        sellText = transform.GetChild(0).Find("Sell").GetComponent<TMP_Text>();
+        sellText = transform.GetChild(0).Find("Banner").GetComponent<TMP_Text>();
         img = transform.GetChild(0).Find("Image").GetComponent<Image>();
         effectImage = transform.GetChild(0).Find("Effect").GetComponent<Image>();
         cardMat = gameObject.GetComponent<MeshRenderer>().material;
@@ -67,6 +74,66 @@ public class CardController : MonoBehaviour
         gameController = FindObjectOfType<GameController>();
         diceRoller = FindObjectOfType<DiceRoller>();
 
+        cardHolder = FindObjectOfType<CardHolder>();
+
+    }
+
+    public void setState(ObjectState objState){
+        state = objState;
+
+        Material mat = new Material(gameObject.GetComponent<MeshRenderer>().material);
+
+        if(state == ObjectState.Buy){
+            mat.SetFloat("_Buy",1f);
+        }else{
+            mat.SetFloat("_Buy",0f);
+        }
+
+        gameObject.GetComponent<MeshRenderer>().material = mat;
+    }
+
+    public void OnPointerClick(PointerEventData pointerEventData)
+    {
+        List<GameObject> itemsHovered = pointerEventData.hovered;
+
+        if (itemsHovered.Count <= 0) return;
+
+        Debug.Log(string.Join(", ",itemsHovered));
+
+        GameObject SelectedItem = itemsHovered[0];
+
+        if(clicked && itemsHovered.Contains(transform.GetChild(0).Find("Banner").gameObject)){
+
+            if(state == ObjectState.Buy && gameController.MoneyHeld >= cardTemplate.basePrice){
+
+                gameController.UpdateMoney(cardTemplate.basePrice, true);
+                cardHolder.CardAdded(cardTemplate);
+                Destroy(gameObject,0.3f);
+
+            }else if(state == ObjectState.Sell){
+
+                gameController.UpdateMoney(SellValue, false);
+                cardHolder.CardRemoved(gameObject);
+            }
+
+            
+
+        }else if(state == ObjectState.Booster){
+
+            transform.parent.parent.GetComponent<CardBoosterController>().cardSelected(gameObject);
+
+        }else if(clicked){
+
+            transform.position = basePos;
+
+        }else{
+
+            transform.position = basePos + new Vector3(0, 2*offsetFactor, 0);
+
+        }
+
+        clicked = !clicked;
+        transform.GetChild(0).Find("Banner").GetComponent<CardBannerScript>().clicked = clicked;
     }
 
     private void FixedUpdate() {
@@ -122,12 +189,18 @@ public class CardController : MonoBehaviour
     }
    
 
-    public void SetupCard(){
+    public void SetupCard(ObjectState state){
         
         descriptionText.text = cardTemplate.description;
         img.sprite = cardTemplate.imgOverlay;
         effectImage.sprite = Resources.Load<Sprite>($"cards/Sprites/{cardTemplate.cardClass}");
-        sellText.text = $"${cardTemplate.baseSellValue}";
+
+        if(state == ObjectState.Buy){
+            sellText.text = $"${cardTemplate.basePrice}";
+        }else{
+            sellText.text = $"${cardTemplate.baseSellValue}";
+        }
+        
         SellValue = cardTemplate.baseSellValue;
         cardType = cardTemplate.cardType;
         nameText.text = cardType.ToString();
@@ -149,85 +222,24 @@ public class CardController : MonoBehaviour
         }
     }
 
-    //move card up or down on hover or exit also tilt depending on mouse distance from center of card
-    void OnMouseOver(){
-        if(!isMoving && !entered){
-            entered = true;
-        }
-        
-    }
-    void OnMouseExit(){
-        entered = false;
-        if(!canPickup){
-            transform.rotation = baseRot;
-        }else{
-            transform.rotation = Quaternion.Euler(-30,180,0);
-        }
-    }
-
-    void Update(){
-        if(!boosterCard){
-            if(!atTop && !isMoving && entered && Input.GetMouseButtonDown(0)){
-                StartCoroutine(Hovered());
-                gameObject.GetComponent<AudioSource>().Play();
-            }   
-            if(atTop && !isMoving && entered && Input.GetMouseButtonDown(0)){
-                StartCoroutine(Return());
-                transform.rotation = baseRot;
-                gameObject.GetComponent<AudioSource>().Play();
-            }
-            if(atTop && !isMoving && entered){
-                Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.WorldToScreenPoint(transform.position).z));
-
-                Vector3 cardPos = transform.position;
-
-                Vector3 mouseDif = mousePos - cardPos;
-
-                mouseDif *= 2.5f;
-            
-                Quaternion newRot = Quaternion.Euler(baseRot.eulerAngles.x + -mouseDif.y , baseRot.eulerAngles.y + -mouseDif.x, baseRot.eulerAngles.z);
-                transform.rotation = Quaternion.Slerp(transform.rotation, newRot, 15f * Time.deltaTime); 
-            }
-        }
-        
-        
-        
-            
-        
-    }
-
-    IEnumerator Hovered(){
-        while(Vector3.Distance(transform.position, basePos+offsetPos) > 0.01f){
-            transform.position = Vector3.Lerp(transform.position, basePos+offsetPos, cardSpeed * Time.deltaTime);
-            isMoving = true;
-            yield return null;
-        } 
-        atTop = true;
-        isMoving = false;
-    }
-
-    IEnumerator Return(){
-        while(Vector3.Distance(transform.position, basePos) > 0.01f){
-            transform.position = Vector3.Lerp(transform.position, basePos, cardSpeed * Time.deltaTime);
-            isMoving = true;
-            yield return null;
-        } 
-        atTop = false;
-        isMoving = false;
-    }
-
+    
     //lift card when scored
     public IEnumerator ScoreCard(){
-        while (Vector3.Distance(transform.position,basePos + offsetPos) > 0.01f){
-            transform.position = Vector3.Lerp(transform.position, basePos + offsetPos, cardSpeed * Time.deltaTime);
-            isMoving = true;
+        float duration = 0.4f;
+        float timeElapsed = 0f;
+
+        while (timeElapsed < duration){
+            transform.position = Vector3.Lerp(transform.position, basePos + offsetPos, timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
         }
-        yield return new WaitForSeconds(1f);
-        while (Vector3.Distance(transform.position,basePos) > 0.01f){
-            transform.position = Vector3.Lerp(transform.position, basePos, cardSpeed * Time.deltaTime);
-            isMoving = true;
+        timeElapsed = 0f;
+        yield return new WaitForSeconds(1.2f);
+        while (timeElapsed < duration){
+            transform.position = Vector3.Lerp(transform.position, basePos, timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
         }
-        isMoving = false;
     }
 
 }

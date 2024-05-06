@@ -110,9 +110,9 @@ public class Score : MonoBehaviour
 
     }
 
-    
+    List<GameObject> OrderedList = new List<GameObject>();
     //gets the active cards text elements and edits them accordingly    
-    IEnumerator ScoreFaces(){
+    private IEnumerator ScoreFaces(){
         gameController.diceResults.Clear();
         pitch = 0.9f;
 
@@ -128,19 +128,14 @@ public class Score : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         //orders the dice by which effect they have
-        List<GameObject> OrderedList = gameController.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
+        OrderedList = gameController.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
 
-        //goes through list and gets SO values
-        foreach(GameObject dice in OrderedList){
-            DiceRoll diceScript = dice.GetComponent<DiceRoll>();
-            string value = diceScript.faceName;
-            DiceType type = diceScript.diceTemplate.diceType;
 
-            scoreDice.ProcessDice(type,dice,value);
+        StartCoroutine(scoreDice.IterateOrderedDice(OrderedList));
+        
+    }
 
-            yield return new WaitForSeconds(0.7f);
-        } 
-
+    public IEnumerator ContinueDice(){
         if(shouldReroll && !hasRerolled){
             hasRerolled = true;
 
@@ -158,10 +153,11 @@ public class Score : MonoBehaviour
             StartCoroutine(scoreCards.ProcessCards(gameController.diceResults));
             hasRerolled = false;
             shouldReroll = false;
+            OrderedList.Clear();
         }
+        scoreDice.diceScorePos.position = scoreDice.diceScorePosStart;
 
     }
-
 
     
 
@@ -180,7 +176,7 @@ public class Score : MonoBehaviour
             dice.GetComponent<DiceRoll>().hasBeenRolled = false;
 
 
-            diceDisplay.DiceAdded(dice);
+            diceDisplay.DiceAdded(dice,ObjectState.Sell);
             yield return new WaitForSeconds(0.2f);
         }
     }

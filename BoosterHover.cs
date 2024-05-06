@@ -4,40 +4,21 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public enum MarketStage{
-    None,
-    InCheckout,
-    OnStand,
-    AtSellBoard,
-}
-public interface GetValues{
-    public Dictionary<string, float> GetValuesAvailable();
-    public MarketStage GetStage();
-    public void SetStage(MarketStage stage);
-}
-
-public class BoosterHover : MonoBehaviour, GetValues
+public class BoosterHover : MonoBehaviour
 {
     public BoosterTemplate boosterTemp;
     public GameObject ItemDesc;
-    private GameObject openDesc;
+    public GameObject openDesc;
+    public Transform Booster;
 
-    public float scaleFactor = 1.0f;
-    public float offsetFactor = 1.0f;
 
-    public MarketStage currentStage = MarketStage.None;
+    public bool Selected = false;
 
-    public MarketStage GetStage(){
-        return currentStage;
-    }
+    Coroutine sellAnimCoro = null;
 
-    public void SetStage(MarketStage stage){
-        currentStage = stage;
-    }
+    public Quaternion baseRot;
 
-    public Dictionary<string, float> GetValuesAvailable(){
-        return new Dictionary<string, float> {{"Buy", boosterTemp.basePrice},{"Sell", 0f}};
-    }
+    
 
     void OnMouseEnter(){
         
@@ -48,35 +29,90 @@ public class BoosterHover : MonoBehaviour, GetValues
 
             if(openDesc == null){
 
-                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5.5f*offsetFactor,0)),Quaternion.Euler(Vector3.zero));
+                GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(0,5.5f*boosterTemp.offsetFactor,0)),Quaternion.Euler(Vector3.zero));
 
-                Desc.transform.localScale *= scaleFactor;
+                Desc.transform.localScale *= boosterTemp.scaleFactor;
 
                 Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{boosterTemp.name}\n{boosterTemp.description}";
                 Desc.transform.SetParent(transform);
-                Desc.transform.Find("Price").GetComponent<TMP_Text>().text = $"Buy: ${boosterTemp.basePrice}";
-
-                
-                Desc.transform.localScale *= 1.2f;   
+                Desc.transform.Find("Sell").GetChild(0).GetComponent<TMP_Text>().text = $"Buy: ${boosterTemp.basePrice}";
+ 
                 openDesc = Desc;
-                
                 openDesc.transform.LookAt(Camera.main.transform.position);
                 openDesc.transform.rotation *= Quaternion.Euler(0,180,0);
             }
         }
        
     }
+
+    void OnMouseDown(){
+        Selected = !Selected;
+
+        openDesc.transform.Find("Sell").GetComponent<BoosterBuyScript>().selected = Selected;
+        openDesc.transform.Find("Sell").GetComponent<BoosterBuyScript>().SwapColor();
+
+        if(sellAnimCoro != null){
+            StopCoroutine(sellAnimCoro);
+            sellAnimCoro = null;
+        }
+
+        if(Selected){
+            sellAnimCoro = StartCoroutine(SellAnim());
+        }
+    }
+
     void OnMouseExit(){
         
-        if(transform.childCount > 0){
+        if(transform.childCount > 0 && !Selected){
             Vector3 pos = transform.position + boosterTemp.positionOffset;
             transform.GetChild(0).position = pos;
+            if(openDesc != null){
+                Destroy(openDesc);
+            }
         }
         
         
-        if(openDesc != null){
-            Destroy(openDesc);
-        }
+        
         
     }
+
+    private IEnumerator SellAnim(){
+
+        float TimeValue = 0.05f;
+        float Elapsed = 0f;
+        bool flip = false;
+        int flipCount = 0;
+        int maxFlips = 6;
+        float angleChange = 10f;
+        Quaternion endVal;
+
+        while(Selected && Booster != null){
+            if(flip){
+                endVal = baseRot * Quaternion.Euler(angleChange,0,0);
+            }else{
+                endVal = baseRot * Quaternion.Euler(-angleChange,0,0);
+            }
+
+            if(flipCount == maxFlips){
+                endVal = baseRot;
+            }
+
+
+            Booster.rotation = Quaternion.Slerp(Booster.rotation, endVal,  Elapsed / TimeValue);
+
+            Elapsed += Time.deltaTime;
+            
+            if(Elapsed > TimeValue && flipCount == maxFlips){
+                yield return new WaitForSeconds(1.5f);
+                flipCount = 0;
+            }else if(Elapsed > TimeValue){
+                flip = !flip;
+                Elapsed = 0f;
+                flipCount++;
+            }
+
+            yield return null;
+        }
+    }
+
 }

@@ -35,15 +35,18 @@ public class CardHolder : MonoBehaviour
         if(gameController.CardsHeld.Count < maxCards){
             GameObject card = GameObject.Instantiate(CardPrefab, spawnPoint, Quaternion.identity * Quaternion.Euler(-15,-185,0));
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
-            card.GetComponent<CardController>().SetupCard();
+            card.GetComponent<CardController>().SetupCard(ObjectState.Sell);
+            card.GetComponent<CardController>().setState(ObjectState.Sell);
             card.transform.SetParent(transform);
             gameController.CardsHeld.Add(card);
             CardsUpdated();
         }
     }
 
-    void CardRemoved(){
-        //not done yet :( neglected method
+    public void CardRemoved(GameObject card){
+        gameController.CardsHeld.Remove(card);
+        Destroy(card,0.3f);
+        CardsUpdated();
     }
 
     //move cards according to when they should be with new values

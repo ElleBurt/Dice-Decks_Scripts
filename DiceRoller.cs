@@ -87,7 +87,7 @@ public class DiceRoller : MonoBehaviour
 
                 DiceDisplay diceDisplay = slot.Slot.GetComponent<DiceDisplay>();
 
-                diceDisplay.DiceAdded(Dice);
+                diceDisplay.DiceAdded(Dice,ObjectState.Sell);
 
                 gameController.DiceHeld.Add(Dice);
 

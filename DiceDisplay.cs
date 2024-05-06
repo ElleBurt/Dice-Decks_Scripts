@@ -7,10 +7,9 @@ using System.Text.RegularExpressions;
 
 public class DiceDisplay : MonoBehaviour
 {
-
+    private GameController gameController;
     ScoreCards scoreCards;
 
-    private Vector3 basePos;
     private Quaternion baseRot;
     private Vector3 hoverOffset = new Vector3(0f, 2f, 0f);
     public bool MouseOver = false;
@@ -24,28 +23,62 @@ public class DiceDisplay : MonoBehaviour
 
     public bool Selected = false;
     private Coroutine sellAnimCoro;
+
+    public ObjectState state;
+
+    bool boosterOpen = false;
+
+
+    [Range(0f, 1f)]
+    public float descScaleFactor = 1.0f;
+    [Range(0f, 1f)]
+    public float diceOffsetFactor = 1.0f;
+
+    public Vector3 descOffsetFactor = Vector3.zero;
+
     // Start is called before the first frame update
     void Awake()
     {
-        basePos = transform.position;
+        gameController = FindObjectOfType<GameController>();
         scoreCards = FindObjectOfType<ScoreCards>();
     }
 
 
     private void OnMouseDown() {
-        Selected = !Selected;
 
-        openDesc.transform.Find("Sell").GetComponent<DiceHeldInfoScript>().selected = Selected;
-        openDesc.transform.Find("Sell").GetComponent<DiceHeldInfoScript>().SwapColor();
+        if(state == ObjectState.Booster){
 
-        if(sellAnimCoro != null){
-            StopCoroutine(sellAnimCoro);
-            sellAnimCoro = null;
+            foreach(Transform slot in GameObject.Find("diceDisplay").transform){
+                if(slot.childCount == 0 && state == ObjectState.Booster){
+                    slot.GetComponent<DiceDisplay>().DiceAdded(dice.gameObject, ObjectState.Sell);
+                    gameController.DiceHeld.Add(dice.gameObject);
+                    dice = null;
+                    if(openDesc != null){
+                        Destroy(openDesc);
+                    }
+                    break;
+                }
+            }
+
+            StartCoroutine(transform.parent.GetComponent<DiceBoxController>().ThrowBox());
+        }else{
+            Selected = !Selected;
+
+            openDesc.transform.Find("Sell").GetComponent<DiceHeldInfoScript>().selected = Selected;
+            openDesc.transform.Find("Sell").GetComponent<DiceHeldInfoScript>().SwapColor();
+
+            if(sellAnimCoro != null){
+                StopCoroutine(sellAnimCoro);
+                sellAnimCoro = null;
+            }
+
+            if(Selected){
+                sellAnimCoro = StartCoroutine(SellAnim());
+            }
         }
+        
 
-        if(Selected){
-            sellAnimCoro = StartCoroutine(SellAnim());
-        }
+       
     }
 
     private IEnumerator SellAnim(){
@@ -58,7 +91,7 @@ public class DiceDisplay : MonoBehaviour
         float angleChange = 10f;
         Quaternion endVal;
 
-        while(Selected){
+        while(Selected && dice != null){
             if(flip){
                 endVal = baseRot * Quaternion.Euler(angleChange,0,0);
             }else{
@@ -68,6 +101,7 @@ public class DiceDisplay : MonoBehaviour
             if(flipCount == maxFlips){
                 endVal = baseRot;
             }
+
 
             dice.rotation = Quaternion.Slerp(dice.rotation, endVal,  Elapsed / TimeValue);
 
@@ -104,14 +138,21 @@ public class DiceDisplay : MonoBehaviour
     }
 
     //if dice added to display fix rotation
-    public void DiceAdded(GameObject Dice){
+    public void DiceAdded(GameObject Dice, ObjectState objState){
         dice = Dice.transform;
         dice.rotation = new Quaternion(0,0,0,0);
         baseRot = dice.rotation;
+        dice.position = transform.position;
+        dice.SetParent(transform);
+        state = objState;
+
     }
     public void DiceRemoved(){
+        
         dice = null;
+        state = ObjectState.None;
     }
+
 
     //move dice up or down
     void Update(){
@@ -119,19 +160,30 @@ public class DiceDisplay : MonoBehaviour
         if(dice != null){
             
             if(!MouseOver){
-                dice.position = basePos;
-                Destroy(openDesc);
+
+                dice.position = transform.position;
+                
+                if(openDesc != null){
+                    Destroy(openDesc);
+                }
+                
+
             }else{
-                dice.position = basePos+hoverOffset;
+                dice.position = transform.position + (hoverOffset * diceOffsetFactor);
                 
                 if(openDesc == null){
-                    GameObject Desc = GameObject.Instantiate(ItemDesc,(transform.position + new Vector3(-3,6f,0)),Quaternion.identity);
+
                     GameObject dice = transform.GetChild(0).gameObject;
+                    GameObject Desc = GameObject.Instantiate(ItemDesc,(dice.transform.position + descOffsetFactor),Quaternion.identity);
                     DiceTemplate dt = dice.GetComponent<DiceRoll>().diceTemplate;
+
+                    string moneyInfo = state == ObjectState.Buy ? $"Buy: ${dt.basePrice}" : $"Sell: ${dt.baseSellValue}";
+
                     Desc.transform.Find("Desc").GetComponent<TMP_Text>().text = $"{dt.name}\n{dt.description}";
                     Desc.transform.Find("RightSide").Find("SideInfo").Find("High").GetComponent<TMP_Text>().text = $"High: {dt.hiVal}";
                     Desc.transform.Find("RightSide").Find("SideInfo").Find("Low").GetComponent<TMP_Text>().text = $"Low: {dt.loVal}";
-                    Desc.transform.Find("Sell").GetChild(0).GetComponent<TMP_Text>().text = $"Sell: ${dt.baseSellValue}";
+                    Desc.transform.Find("Sell").GetChild(0).GetComponent<TMP_Text>().text = moneyInfo;
+                    Desc.transform.localScale *= descScaleFactor;
                     Desc.transform.SetParent(transform);
                     
 

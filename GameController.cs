@@ -5,14 +5,19 @@ using TMPro;
 using UnityEngine.UI;
 using System.Linq;
 
+public enum ObjectState{
+    None,
+    Buy,
+    Sell,
+    Booster,
+}
+
 public class GameController : MonoBehaviour
 {
     [Header("Camera Properties")]
     public Transform DiceView;
     public Transform MapView;
     public int cameraMoveSpeed;
-    public bool cameraAlignedToMap = false;
-    public bool cameraAlignedToDice = false;
     public Camera mainCamera;
 
     [Header("Map Properties")]
@@ -40,7 +45,15 @@ public class GameController : MonoBehaviour
     public List<GameObject> DiceHeld = new List<GameObject>();
     public List<GameObject> CardsHeld = new List<GameObject>();
 
-    
+
+    public enum currentStage{
+        None,
+        Market,
+        DiceTray,
+        MapView,
+    }
+
+    public currentStage sceneStage;
 
     [Header("Health Properties")]
     public float MaxHealth;
@@ -296,7 +309,7 @@ public class GameController : MonoBehaviour
         Scroll = GameObject.Instantiate(ScrollPre, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
         genMap.IconGeneration();
-        MoveCameraTo(lastIconTransform,new Vector3(0,13,-5));
+        MoveCameraTo(lastIconTransform,new Vector3(0,13,-5),GameController.currentStage.MapView);
 
         
     }
@@ -310,36 +323,56 @@ public class GameController : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.K)){
             GameStarted();
         }
-        if(cameraAlignedToMap){
+        if(Input.mouseScrollDelta.y != 0){
+
+            bool directionIsBack = Input.mouseScrollDelta.y < 0 ? true : false;
+
             Vector3 pos = mainCamera.transform.position;
             pos.z += Input.mouseScrollDelta.y*1.25f;
 
-
-            if(pos.z > cameraZmin && pos.z < cameraZmax){
-                if(Input.mouseScrollDelta.y < 0 && pos.z < 0){
-
-                    if(cameraMovingFromScroll != null){
-                        StopCoroutine(cameraMovingFromScroll);
-                        cameraMovingFromScroll = null;
-                    }
-
-                    cameraMovingFromScroll = StartCoroutine(movingFromMap(new Vector3(107.68f,35.79f,-20.92f), Quaternion.Euler(18.7f,0,0)));
-
-                }else if(Input.mouseScrollDelta.y > 0 && pos.z < 0){
-
-                    if(cameraMovingFromScroll != null){
-                        StopCoroutine(cameraMovingFromScroll);
-                        cameraMovingFromScroll = null;
-                    }
-
-                    cameraMovingFromScroll = StartCoroutine(movingFromMap(lastIconTransform.position + new Vector3(0,13,-5), Quaternion.Euler(48f,0,0)));
-                }else{
-                    mainCamera.transform.position = pos;
-                }
-
-                
+            if(cameraMovingFromScroll != null){
+                StopCoroutine(cameraMovingFromScroll);
+                cameraMovingFromScroll = null;
             }
+
+            switch(sceneStage){
+                case currentStage.MapView:
+
+                    if(pos.z > cameraZmin && pos.z < cameraZmax){
+
+                        
+
+                        if(directionIsBack && pos.z < 0){
+
+                            cameraMovingFromScroll = StartCoroutine(movingFromMap(DiceView.position, DiceView.rotation));
+
+                        }else if (!directionIsBack && pos.z < 0){
+
+                            cameraMovingFromScroll = StartCoroutine(movingFromMap(lastIconTransform.position + new Vector3(0,13,-5), Quaternion.Euler(48f,0,0)));
+
+                        }else{
+                            mainCamera.transform.position = pos;
+                        }
+
+                    }
+                    
+                break;
+
+                case currentStage.Market:
+                    if(directionIsBack){
+                        cameraMovingFromScroll = StartCoroutine(movingFromMap(DiceView.position, DiceView.rotation));
+                    }else{
+                        cameraMovingFromScroll = StartCoroutine(movingFromMap(GameObject.Find("MarketTableView").transform.position, GameObject.Find("MarketTableView").transform.rotation));
+                    }
+                break;
+
+                default:
+                break;
+            }
+
         }
+
+        
     }
 
     private IEnumerator movingFromMap(Vector3 TargetPos, Quaternion TargetRot){
@@ -360,7 +393,7 @@ public class GameController : MonoBehaviour
         Scroll = GameObject.Instantiate(ScrollPre, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
         genMap.displayIcons(true);
-        MoveCameraTo(lastIconTransform,new Vector3(0,13,-5));
+        MoveCameraTo(lastIconTransform,new Vector3(0,13,-5),currentStage.MapView);
     }
 
     public void UpdateHealth(float ChangeFactor, bool Damaged){
@@ -413,11 +446,16 @@ public class GameController : MonoBehaviour
 
         currentIconTransform = icon;
 
-        StartCoroutine(MovePlayerToken());
+        if(movingToken != null){
+            StopCoroutine(movingToken);
+            movingToken = null;
+        }
 
-        yield return new WaitForSeconds(1.5f);
+        movingToken = StartCoroutine(MovePlayerToken());
 
-        MoveCameraTo(GameObject.FindGameObjectsWithTag("DiceTrayView")[0].transform,Vector3.zero);
+        yield return new WaitForSeconds(0.5f);
+
+        MoveCameraTo(GameObject.FindGameObjectsWithTag("DiceTrayView")[0].transform,Vector3.zero,GameController.currentStage.DiceTray);
         atkCardHolder.ReplenishCards();
 
         yield return new WaitForSeconds(1f);
@@ -468,76 +506,77 @@ public class GameController : MonoBehaviour
         yield return null;
     }
 
+
+    private Coroutine droppingToken = null;
     //drops the player token at the current icon 
     public IEnumerator DropPlayerToken(){
+        float TimeValue = 2f;
+        float Elapsed = 0f;
         genMap.HighlightPaths(lastIconTransform);
         
         
         Vector3 tokenOffset = lastIconTransform.position;
         
-
         if(PlayerToken == null){
             PlayerToken = GameObject.Instantiate(PlayerTokenPrefab, tokenOffset + new Vector3(0,30,0), Quaternion.Euler(-90,0,0));
         }
-        while(Vector3.Distance(PlayerToken.transform.position,tokenOffset) > 0.1f){
-            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position,tokenOffset, TokenMoveSpeed * Time.deltaTime);
+
+        while(Elapsed < TimeValue){
+            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position,tokenOffset, Elapsed / TimeValue);
+            Elapsed += Time.deltaTime;
             yield return null;
         }
-        cameraAlignedToMap = true;
-    }
 
+        droppingToken = null;
+    }
+    
+
+    private Coroutine movingToken = null;
     //moves the player token to the selected icon
     public IEnumerator MovePlayerToken(){
+
+        if(droppingToken != null){
+            StopCoroutine(droppingToken);
+            PlayerToken.transform.position = lastIconTransform.position;
+            droppingToken = null;
+        }
+
+        float TimeValue = 1f;
+        float Elapsed = 0f;
         Vector3 tokenOffset = currentIconTransform.position;
 
-        while(Vector3.Distance(PlayerToken.transform.position,tokenOffset) > 0.1f){
-            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position, tokenOffset, TokenMoveSpeed * Time.deltaTime);
-            yield return new WaitForSeconds(0.01f);
+        while(Elapsed < TimeValue){
+            PlayerToken.transform.position = Vector3.Lerp(PlayerToken.transform.position, tokenOffset, Elapsed / TimeValue);
+            Elapsed += Time.deltaTime;
+            yield return null;
         }
 
         lastIconTransform = currentIconTransform.transform;
 
-        StartCoroutine(DissolveToken());
-    }
-
-    //dissolves the token
-    IEnumerator DissolveToken(){
+        TimeValue = 1f;
+        Elapsed = 0f;
         float StartValue = 0f;
         float EndValue = 1f;
-        float TimeValue = 1f;
-        float Elapsed = 0f;
 
         while(Elapsed < TimeValue){
             float CurrentValue = Mathf.Lerp(StartValue, EndValue, Elapsed / TimeValue);
-
-            Elapsed += Time.deltaTime;
             PlayerToken.GetComponent<MeshRenderer>().material.SetFloat("_Step", CurrentValue);
-
+            Elapsed += Time.deltaTime;
             yield return null;
         }
 
-        yield return new WaitForSeconds(1f);
-
-        Destroy(PlayerToken);
+        Destroy(PlayerToken,0.1f);
     }
-    
-
-
-
 
 
     // Camera Functions
     public Coroutine cameraMove;
 
 
-    private IEnumerator MoveCamera(Transform newView, Vector3 offset){
-
-        cameraAlignedToMap = false;
-        cameraAlignedToDice = false;
+    private IEnumerator MoveCamera(Transform newView, Vector3 offset, currentStage stage){
         
         Vector3 targetPos = newView.position + offset;
         Quaternion rotation = Quaternion.Euler(0f,0f,0f);
-
 
         if(newView.CompareTag("MapIcon") || newView.CompareTag("Start")){
             yield return new WaitForSeconds(2f);
@@ -554,20 +593,25 @@ public class GameController : MonoBehaviour
             yield return null;
         }
 
-        if(newView.CompareTag("DiceTrayView")){
-            cameraAlignedToDice = true;
+        sceneStage = stage;
+
+        if(stage == currentStage.DiceTray){
             Destroy(Scroll, 1f);
-        }else if(newView.CompareTag("MapIcon") || newView.CompareTag("Start")){
-            StartCoroutine(DropPlayerToken());
+        }else if(stage == currentStage.MapView){
+            if(droppingToken != null){
+                StopCoroutine(droppingToken);
+                droppingToken = null;
+            }
+            droppingToken = StartCoroutine(DropPlayerToken());
         }
     }
 
-    public void MoveCameraTo(Transform newView,Vector3 offset){
+    public void MoveCameraTo(Transform newView,Vector3 offset, currentStage stage){
         if(cameraMove != null){
             StopCoroutine(cameraMove);
             cameraMove = null;
         }
-        cameraMove = StartCoroutine(MoveCamera(newView,offset));
+        cameraMove = StartCoroutine(MoveCamera(newView,offset,stage));
     }
    
 

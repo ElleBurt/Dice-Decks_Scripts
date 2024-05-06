@@ -6,8 +6,9 @@ using UnityEngine.UI;
 using TMPro;
 using System.Text.RegularExpressions;
 
-public class DiceBoxHover : MonoBehaviour, GetValues
+public class DiceBoxHover : MonoBehaviour
 {
+    /* 
     public bool animFin = false;
     DiceRoller diceRoller;
     public bool hovered = false;
@@ -108,4 +109,5 @@ public class DiceBoxHover : MonoBehaviour, GetValues
             transform.parent.GetComponent<DiceBoxController>().closeBox(transform);
         }
     }
+    */
 }

@@ -12,8 +12,7 @@ public class CardBoosterController : MonoBehaviour
     public int cardsReady = 0;
     CardHolder cardHolder;
 
-    public bool wasBrought = false;
-    
+    public bool fromMarket = false;
 
     void Awake(){
         gameController = FindObjectOfType<GameController>();
@@ -45,12 +44,14 @@ public class CardBoosterController : MonoBehaviour
         Destroy(gameObject, 3f);
 
 
-        if(wasBrought){
-            MarketEventController MEC = FindObjectOfType<MarketEventController>();
-            MEC.ProcessBoosters(); 
+
+        if(fromMarket){
+            gameController.MoveCameraTo(GameObject.Find("MarketTableView").transform,Vector3.zero,GameController.currentStage.Market);
         }else{
             gameController.RoundConclusion();
         }
+        
+        
         
     }
 
@@ -76,7 +77,7 @@ public class CardBoosterController : MonoBehaviour
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
             card.GetComponent<CardController>().boosterCard = true;
             card.GetComponent<BoxCollider>().enabled = false;
-            card.GetComponent<CardController>().SetupCard();
+            card.GetComponent<CardController>().SetupCard(ObjectState.Booster);
         }
         
     }
@@ -88,9 +89,7 @@ public class CardBoosterController : MonoBehaviour
             Transform spawn = transform.Find($"CS{i}");
             spawn.GetChild(0).GetComponent<CardController>().basePos = spawn.position;
             
-            spawn.GetComponent<CardHover>().boosterCard = true;
-            spawn.GetComponent<CardHover>().Setup();
-            spawn.GetComponent<BoxCollider>().enabled = true;
+            spawn.GetChild(0).GetComponent<CardController>().setState(ObjectState.Booster);
         }
     }
 

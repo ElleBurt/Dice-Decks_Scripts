@@ -13,6 +13,10 @@ public class DiceHeldInfoScript : MonoBehaviour
 
     GameController gameController;
 
+    DiceDisplay diceDisplay;
+
+    private GameObject dice;
+
     void Start(){
         gameController = FindObjectOfType<GameController>();
         transform.GetChild(0).GetComponent<TMP_Text>().color = cantSellColor;
@@ -31,16 +35,53 @@ public class DiceHeldInfoScript : MonoBehaviour
     }
 
     private void OnMouseDown() {
+        
+        diceDisplay = transform.parent.parent.GetComponent<DiceDisplay>();
+        dice = diceDisplay.dice.gameObject;
+        
         if(selected){
-            Debug.Log(Regex.Replace(transform.GetChild(0).GetComponent<TMP_Text>().text,@"\D",""));
 
-            gameController.UpdateMoney( int.Parse(Regex.Replace(transform.GetChild(0).GetComponent<TMP_Text>().text, @"\D","")) , false);
+            switch(diceDisplay.state){
 
-            transform.parent.parent.GetComponent<DiceDisplay>().Selected = false;
-            transform.parent.parent.GetComponent<DiceDisplay>().MouseOver = false;
+                case ObjectState.Buy:
+                    foreach(Transform slot in GameObject.Find("diceDisplay").transform){
+                        if(slot.childCount == 0){
+                            slot.GetComponent<DiceDisplay>().DiceAdded(dice, ObjectState.Sell);
+                            gameController.UpdateMoney(dice.GetComponent<DiceRoll>().diceTemplate.basePrice, true);
+                            gameController.DiceHeld.Add(dice);
+                            diceDisplay.dice.gameObject.GetComponent<MeshCollider>().enabled = true;
+                            diceDisplay.dice = null;
+                            if(diceDisplay.openDesc != null){
+                                Destroy(diceDisplay.openDesc);
+                            }
+                            break;
+                        }
+                    }
+
+                break;
+
+                case ObjectState.Sell:
+
+                    gameController.UpdateMoney( int.Parse(Regex.Replace(transform.GetChild(0).GetComponent<TMP_Text>().text, @"\D","")) , false);
+
+                    diceDisplay.Selected = false;
+                    diceDisplay.MouseOver = false;
+
+                    gameController.DiceHeld.Remove(diceDisplay.dice.gameObject);
+                    
+                    Destroy(diceDisplay.openDesc);
+                    Destroy(dice, 0.3f);
+
+                break;
+
+                default:
+                break;
+            }   
             
-            Destroy(transform.parent.parent.GetComponent<DiceDisplay>().openDesc);
-            Destroy(transform.parent.parent.GetChild(0).gameObject, 0.3f);
+
+            
         }
     }
+
+    
 }

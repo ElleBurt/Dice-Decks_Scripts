@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class SellBoard : MonoBehaviour
 {
+    /* 
     private bool isAtBoard = false;
     // Start is called before the first frame update
     void OnMouseEnter(){
@@ -19,4 +20,5 @@ public class SellBoard : MonoBehaviour
         isAtBoard = !isAtBoard;
         
     }
+    */
 }

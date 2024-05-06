@@ -29,6 +29,7 @@ public class DiceTemplate : ScriptableObject {
     public int hiVal;
     public int loVal;
     public bool HasEffect;
+    public float diceWidth;
     [TextAreaAttribute]
     public string description;
     public DiceType diceType;

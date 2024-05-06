@@ -9,8 +9,7 @@ public class DiceBoxController : MonoBehaviour
     private GameController gameController;
     private DiceRoller diceRoller;
 
-    
-    public bool wasBrought = false;
+    public bool fromMarket = false;
 
     void Awake(){
 
@@ -44,29 +43,9 @@ public class DiceBoxController : MonoBehaviour
             Rigidbody rb = Dice.GetComponent<Rigidbody>();
             Dice.transform.rotation = new Quaternion(0,0,0,0);
             rb.isKinematic = true;
-            
-            
-            foreach(Transform col in transform){
-                if(col.CompareTag("DiceBoxSpawn")){
-                    col.gameObject.GetComponent<DiceBoxHover>().animFin = true;
-                }
-            }
+            spawn.GetComponent<DiceDisplay>().DiceAdded(Dice, ObjectState.Booster);
         }
-        gameController.MoveCameraTo(GameObject.FindGameObjectsWithTag("DiceTrayView")[0].transform,Vector3.zero);
-    }
-
-    public void closeBox(Transform child){
-        foreach(Transform col in transform){
-            if(col.CompareTag("DiceBoxSpawn")){
-                col.gameObject.GetComponent<DiceBoxHover>().animFin = false;
-                col.gameObject.GetComponent<DiceBoxHover>().hovered = false;
-                col.GetComponent<CapsuleCollider>().enabled = false;
-                
-            }
-        }
-
-        Destroy(child.gameObject,0.1f);
-        StartCoroutine(ThrowBox());
+        gameController.MoveCameraTo(gameController.DiceView,Vector3.zero,GameController.currentStage.DiceTray);
     }
 
     public IEnumerator ThrowBox(){
@@ -82,12 +61,12 @@ public class DiceBoxController : MonoBehaviour
         Destroy(gameObject,3f);
         yield return new WaitForSeconds(1);
 
-        if(wasBrought){
-            MarketEventController MEC = FindObjectOfType<MarketEventController>();
-            MEC.ProcessBoosters(); 
+        if(fromMarket){
+            gameController.MoveCameraTo(GameObject.Find("MarketTableView").transform,Vector3.zero,GameController.currentStage.Market);
         }else{
             gameController.RoundConclusion();
         }
+        
         
     }
 

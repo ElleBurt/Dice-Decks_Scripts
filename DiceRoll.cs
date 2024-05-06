@@ -13,6 +13,7 @@ public class DiceRoll : MonoBehaviour
     public bool accountedFor = false;
 
     public string faceName;
+    public bool inScoringPhase = false;
 
    [SerializeField] private float maxRandomForceValue, startRollingForce;
 
@@ -29,60 +30,62 @@ public class DiceRoll : MonoBehaviour
    Score score;
    DiceRoller diceRoller;
 
+   
+
 
    
 
    private void Awake(){
-    audioSource = GetComponent<AudioSource>();
-    score = FindObjectOfType<Score>();
-    diceRoller = FindObjectOfType<DiceRoller>();
-    body = GetComponent<Rigidbody>();
-    transform.rotation = new Quaternion(Random.Range(0,360),Random.Range(0,360),Random.Range(0,360),0);
+        audioSource = GetComponent<AudioSource>();
+        score = FindObjectOfType<Score>();
+        diceRoller = FindObjectOfType<DiceRoller>();
+        body = GetComponent<Rigidbody>();
+        transform.rotation = new Quaternion(Random.Range(0,360),Random.Range(0,360),Random.Range(0,360),0);
    }
 
    private void Update(){
-    if (body != null){
-        if (body.velocity.magnitude > 0){
-            hasBeenRolled = true;
-        }
-        
-        if(body.velocity.magnitude == 0 && hasBeenRolled){
+        if (body != null){
+            if (body.velocity.magnitude > 0){
+                hasBeenRolled = true;
+            }
+            
+            if(body.velocity.magnitude == 0 && hasBeenRolled && !inScoringPhase){
 
-            if(IsLevel()){
-                
-                if(!accountedFor){
-                    body.isKinematic = true;
-                    accountedFor = true;
+                if(IsLevel()){
+                    
+                    if(!accountedFor){
+                        body.isKinematic = true;
+                        accountedFor = true;
+                    }
+
+                }else{
+
+                    diceRoller.callReroll(gameObject);
+
                 }
-
-            }else{
-
-                diceRoller.callReroll(gameObject);
-
             }
         }
-    }
    }
 
 
    private bool IsLevel(){
-    foreach(Transform child in transform ){
-        
-        if(child.GetComponent<ParticleSystem>() != null){
-            continue;
-        }
-
-        if(Vector3.Dot(child.forward, Vector3.up)>(1f - skewTolerance)){
-
-            string name = child.name.Contains(".") ? child.name.Substring(0,child.name.Length - 4) : child.name;
-
-            faceName = name;
-            emptyFacingup = child.transform;
+        foreach(Transform child in transform ){
             
-            return true;
+            if(child.GetComponent<ParticleSystem>() != null){
+                continue;
+            }
+
+            if(Vector3.Dot(child.forward, Vector3.up)>(1f - skewTolerance)){
+
+                string name = child.name.Contains(".") ? child.name.Substring(0,child.name.Length - 4) : child.name;
+
+                faceName = name;
+                emptyFacingup = child.transform;
+                
+                return true;
+            }
         }
-    }
-    return false;
+        return false;
    }
 
     private void OnCollisionEnter(Collision other){

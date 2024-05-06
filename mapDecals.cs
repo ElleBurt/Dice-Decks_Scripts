@@ -23,7 +23,7 @@ public class mapDecals : MonoBehaviour
     //Basically just if clicked and camera at map then call the game controller to tell it
     void Update()
     {
-        if(Input.GetMouseButtonDown(0) && active && gameController.cameraAlignedToMap){
+        if(Input.GetMouseButtonDown(0) && active && gameController.sceneStage == GameController.currentStage.MapView){
             if(Regex.Replace(transform.parent.name,@"\D","") == gameController.currentRound.ToString() && genMap.connectedIcons[gameController.lastIconTransform.gameObject].Contains(gameObject)){
                 StartCoroutine(gameController.IconSelected(transform));
             }
