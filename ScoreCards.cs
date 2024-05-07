@@ -91,11 +91,12 @@ public class ScoreCards : MonoBehaviour
             StartCoroutine(CardTriggered(card));
             yield return new WaitForSeconds(0.75f);
         }
-        //check if multi on card has already been edited if not then set it to this value or add it on to the existing one
-        int currentMultiplier = Regex.Match(multiText.text, @"\d+").Success ? int.Parse(Regex.Match(multiText.text, @"\d+").Value) : 1;
+        
 
-        //edits text, doesnt need the medieval contraption above as this is always containing some value || (future me: - honestly confused myself with this one)
-        scoreText.text = (int.Parse(Regex.Match(scoreText.text, @"\d+").Value) * currentMultiplier).ToString();
+        int currentMultiplier = Regex.IsMatch(multiText.text, @"\d+") ? int.Parse(Regex.Match(multiText.text, @"\d+").Value) : 1;
+        
+
+        score.ApplyMulti();
         multiText.text = "";
 
         //returns dice to the tray
@@ -106,7 +107,7 @@ public class ScoreCards : MonoBehaviour
 
         yield return new WaitForSeconds(0.35f);
         //dissolves card
-        StartCoroutine(score.DissolveCard());
+        StartCoroutine(score.FinishRoll());
     }
 
     private void HighRoller(CardController controller, GameObject card){
@@ -251,15 +252,13 @@ public class ScoreCards : MonoBehaviour
 
         if(newMultiplier > 0){
             score.UpdateMulti(newMultiplier);
-        }
-
-        scoreText.text = (int.Parse(scoreText.text) + scoreAddition).ToString();
-
-        if(newMultiplier > 0 || scoreAddition > 0){
             StartCoroutine(controller.ScoreCard());
         }
-        
 
+        if(scoreAddition > 0){
+            StartCoroutine(score.UpdateScore(controller.AdditionValue));
+            StartCoroutine(controller.ScoreCard());
+        }
 
         //if card isnt meant to retain values then clear them
         if(controller.cardTemplate.shouldReset){

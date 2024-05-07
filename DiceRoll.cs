@@ -9,6 +9,8 @@ public class DiceRoll : MonoBehaviour
     public DiceTemplate diceTemplate;
     public Transform emptyFacingup;
 
+    public Transform DiceSlot;
+
     public bool hasBeenRolled = false;
     public bool accountedFor = false;
 

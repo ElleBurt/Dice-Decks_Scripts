@@ -42,12 +42,14 @@ public class Score : MonoBehaviour
 
     //order in which dice are scored based on effects
     Dictionary<DiceType,int> effectOrder = new Dictionary<DiceType,int>(){
-        {DiceType.Poker, 0},
-        {DiceType.Basic, 1},
-        {DiceType.Multi, 2},
-        {DiceType.Elemental, 3},
+
+        {DiceType.Basic, 0},
+        {DiceType.Elemental, 1},
+        {DiceType.Poker, 2},
+        {DiceType.Multi, 3},
         {DiceType.Roulette, 4},
         {DiceType.ReRoll, 5},
+    
     };
 
 
@@ -106,9 +108,31 @@ public class Score : MonoBehaviour
     public void UpdateMulti(int value){
         
         //basically just checks if the multi already contains a number, if not then we must set it
-        multiText.text = Regex.IsMatch(multiText.text, @"\d+") ? $"x{int.Parse(Regex.Match(multiText.text, @"\d+").Value)}" : $"x{value}";
+        multiText.text = Regex.IsMatch(multiText.text, @"\d+") ? $"x{int.Parse(Regex.Match(multiText.text, @"\d+").Value) + value}" : $"x{value}";
 
     }
+
+    public IEnumerator UpdateScore(int value){
+
+        string opperator = value >= 0 ? "+" : "-";
+        
+        bool hasText = Regex.IsMatch(scoreText.text, @"\d+");
+
+        scoreText.text = hasText ? $"{score} {opperator} {Mathf.Abs(value)}" : $"{value}";
+
+        yield return new WaitForSeconds(0.6f);
+
+        scoreText.text = $"{score + value}";
+
+        score += value;
+
+    }
+
+    public void ApplyMulti(){
+        int multi = Regex.IsMatch(multiText.text, @"\d+") ? int.Parse(Regex.Match(multiText.text, @"\d+").Value) : 1;
+        scoreText.text = $"{score * multi}";
+    }
+   
 
     List<GameObject> OrderedList = new List<GameObject>();
     //gets the active cards text elements and edits them accordingly    
@@ -117,13 +141,8 @@ public class Score : MonoBehaviour
         pitch = 0.9f;
 
         if(!hasRerolled){
-            atkCardHolder.DrawCard();
             score=0;
         }
-        
-
-        scoreText = atkCardHolder.ActiveCard.CardBase.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>();
-        multiText = atkCardHolder.ActiveCard.CardBase.transform.Find("Canvas").Find("Multi").GetComponent<TMP_Text>();
 
         yield return new WaitForSeconds(1f);
 
@@ -142,6 +161,8 @@ public class Score : MonoBehaviour
             yield return new WaitForSeconds(1f);
 
             foreach(GameObject dice in diceCollection){
+                dice.transform.SetParent(dice.GetComponent<DiceRoll>().DiceSlot);
+                dice.GetComponent<DiceRoll>().inScoringPhase = false;
                 dice.GetComponent<DiceRoll>().hasBeenRolled = false;
                 dice.GetComponent<DiceRoll>().accountedFor = false;
                 canStartScoring = true;
@@ -149,13 +170,16 @@ public class Score : MonoBehaviour
                 diceRoller.callReroll(dice);
                 yield return new WaitForSeconds(0.3f);
             }
+            yield return new WaitForSeconds(0.2f);
+            scoreDice.diceScorePos.position = scoreDice.diceScorePosStart;
         }else{
+
+            yield return new WaitForSeconds(1f);
+
             StartCoroutine(scoreCards.ProcessCards(gameController.diceResults));
             hasRerolled = false;
             shouldReroll = false;
-            OrderedList.Clear();
         }
-        scoreDice.diceScorePos.position = scoreDice.diceScorePosStart;
 
     }
 
@@ -164,6 +188,9 @@ public class Score : MonoBehaviour
     //moves dice to respective positions in the dice holder
     public IEnumerator ReturnDice(){
         foreach(GameObject dice in gameController.DiceHeld){
+
+            dice.GetComponent<DiceRoll>().inScoringPhase = false;
+            dice.transform.SetParent(dice.GetComponent<DiceRoll>().DiceSlot);
 
             string slot = dice.transform.parent.name;
 
@@ -181,53 +208,27 @@ public class Score : MonoBehaviour
         }
     }
 
-    //fades text elements, adjusts step value on the disolve shader and spawns the weapon
-    public IEnumerator DissolveCard(){
-        float StartValue = 0f;
-        float EndValue = 1f;
-        float TimeValue = 1f;
-        float Elapsed = 0f;
+    public IEnumerator FinishRoll(){
 
-        GameObject card = atkCardHolder.ActiveCard.CardBase;
+        StartCoroutine(mapEvents.MiniDamaged(int.Parse(scoreText.text)));
 
-        Material imageAlpha = new Material(card.transform.Find("Canvas").Find("Icon").GetComponent<Image>().material);
-        TMP_Text atkText = card.transform.Find("Canvas").Find("Attack").GetComponent<TMP_Text>();
-        TMP_Text multiText = card.transform.Find("Canvas").Find("Multi").GetComponent<TMP_Text>();
+        score = 0;
+        scoreText.text = "";
+        OrderedList.Clear();
+        
 
-        card.transform.Find("Canvas").Find("Icon").GetComponent<Image>().material = imageAlpha;
-
-        while(Elapsed < TimeValue){
-            float CurrentValue = Mathf.Lerp(StartValue, EndValue, Elapsed / TimeValue);
-            float CurrentValueInvert = Mathf.Lerp(EndValue, StartValue, Elapsed / TimeValue);
-
-            Elapsed += Time.deltaTime;
-            card.GetComponent<MeshRenderer>().materials[0].SetFloat("_Step", CurrentValue);
-
-            
-            imageAlpha.SetFloat("_Alpha", CurrentValueInvert);
-
-            atkText.color = new Color(atkText.color.r, atkText.color.g, atkText.color.b, CurrentValueInvert);
-
-            multiText.color = new Color(multiText.color.r, multiText.color.g, multiText.color.b, CurrentValueInvert);
-
-            yield return null;
-        }
-
-        StartCoroutine(mapEvents.MiniDamaged(int.Parse(atkText.text)));
-
-        Destroy(card);
-
-        atkCardHolder.ActiveCard = null;
+        canStartScoring = true;
+        ScoringDice = false;
+        hasRerolled = false;
+        shouldReroll = false;
 
         yield return new WaitForSeconds(1f);
+
+        scoreDice.diceScorePos.position = scoreDice.diceScorePosStart;
         
         //let player roll again
-        diceRoller.canRoll = true;
+        diceRoller.canRoll = gameController.CurrentHealth <= 0 ? false : true;
 
-        if(atkCardHolder.lastCard){
-            diceRoller.canRoll = false;
-        }
-        
     }
 
     //yes this is how fizzbuzz works

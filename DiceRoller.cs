@@ -24,7 +24,7 @@ public class DiceRoller : MonoBehaviour
 
    public GameObject RollButton;
 
-   public List<DiceTemplate> DiceBlueprints = new List<DiceTemplate>();
+   //public List<DiceTemplate> DiceBlueprints = new List<DiceTemplate>();
    //public List<GameObject> DiceHeld = new List<GameObject>();
 
    //Spawn point and forces to apply and direction to apply them

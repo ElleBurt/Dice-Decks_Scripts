@@ -145,7 +145,7 @@ public class DiceDisplay : MonoBehaviour
         dice.position = transform.position;
         dice.SetParent(transform);
         state = objState;
-
+        dice.GetComponent<DiceRoll>().DiceSlot = transform;
     }
     public void DiceRemoved(){
         
