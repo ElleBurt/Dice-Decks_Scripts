@@ -46,9 +46,10 @@ public class Score : MonoBehaviour
         {DiceType.Basic, 0},
         {DiceType.Elemental, 1},
         {DiceType.Poker, 2},
-        {DiceType.Multi, 3},
-        {DiceType.Roulette, 4},
-        {DiceType.ReRoll, 5},
+        {DiceType.Luck, 3},
+        {DiceType.Multi, 4},
+        {DiceType.Roulette, 5},
+        {DiceType.ReRoll, 6},
     
     };
 
@@ -174,8 +175,8 @@ public class Score : MonoBehaviour
             scoreDice.diceScorePos.position = scoreDice.diceScorePosStart;
         }else{
 
-            yield return new WaitForSeconds(1f);
-
+            yield return new WaitForSeconds(0.5f);
+            
             StartCoroutine(scoreCards.ProcessCards(gameController.diceResults));
             hasRerolled = false;
             shouldReroll = false;

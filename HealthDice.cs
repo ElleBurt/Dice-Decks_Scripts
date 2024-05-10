@@ -1,10 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Text.RegularExpressions;
 
-[RequireComponent(typeof(Rigidbody))]
-public class DiceRoll : MonoBehaviour
+public class HealthDice : MonoBehaviour
 {
     public DiceTemplate diceTemplate;
     public Transform emptyFacingup;
@@ -24,20 +22,19 @@ public class DiceRoll : MonoBehaviour
    [Header("Audio")]
    private AudioSource audioSource;
 
+
+    public bool DestroyMe = false;
    
    Rigidbody body;
 
-   Score score;
+   CampFireController CFcontroller;
    DiceRoller diceRoller;
-
    
 
-
-   
 
    private void Awake(){
         audioSource = GetComponent<AudioSource>();
-        score = FindObjectOfType<Score>();
+        CFcontroller = FindObjectOfType<CampFireController>();
         diceRoller = FindObjectOfType<DiceRoller>();
         body = GetComponent<Rigidbody>();
         transform.rotation = new Quaternion(Random.Range(0,360),Random.Range(0,360),Random.Range(0,360),0);
@@ -56,6 +53,7 @@ public class DiceRoll : MonoBehaviour
                     if(!accountedFor){
                         body.isKinematic = true;
                         accountedFor = true;
+                        CFcontroller.processRoll(gameObject);
                     }
 
                 }else{
@@ -65,8 +63,20 @@ public class DiceRoll : MonoBehaviour
                 }
             }
         }
+
+        if(DestroyMe){
+            StartCoroutine(shrinkDice());
+        }
    }
 
+    private IEnumerator shrinkDice(){
+        yield return new WaitForSeconds(0.5f);
+        while(Vector3.Distance(transform.localScale, Vector3.zero) > 0.1f){
+            transform.localScale *= 0.9f;
+            yield return null;
+        }
+        Destroy(gameObject);
+    }
 
    private bool IsLevel(){
         foreach(Transform child in transform ){

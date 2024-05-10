@@ -48,13 +48,14 @@ public class ScoreDice : MonoBehaviour
 
     public IEnumerator IterateOrderedDice(List<GameObject> orderedDice){
         DiceBeingScored = new List<GameObject>(orderedDice);
+        int psuedoDIP = 0;
         foreach(GameObject dice in orderedDice){
 
             dice.GetComponent<DiceRoll>().inScoringPhase = true;
 
             StartCoroutine(MoveDiceToScorePos(dice));
 
-            yield return new WaitForSeconds(0.75f);
+            yield return new WaitForSeconds(1f);
         } 
     }
 
@@ -72,6 +73,7 @@ public class ScoreDice : MonoBehaviour
         if (diceWidth > 0){
             xTransformOffset = diceWidth/2;
         }
+
 
         Vector3 targetPos = diceScorePos.position - new Vector3(xTransformOffset,0,0);
         
@@ -307,7 +309,7 @@ public class ScoreDice : MonoBehaviour
                 gameController.UpdateHealth(healthStolen, true);
                 StartCoroutine(scoreScript.UpdateScore(-healthStolen));
             break;
-            case "Luck":
+            case "Clover":
                 int moneyGiven = UnityEngine.Random.Range(1,4);
                 gameController.UpdateMoney(moneyGiven, false);
                 Basic($"{moneyGiven}");
