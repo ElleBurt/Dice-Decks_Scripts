@@ -12,10 +12,13 @@ public class CardBoosterController : MonoBehaviour
     public int cardsReady = 0;
     CardHolder cardHolder;
 
+    GenMapV2 genMapV2;
+
     public bool fromMarket = false;
 
     void Awake(){
         gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         cardHolder = FindObjectOfType<CardHolder>();
         mainCamera = gameController.mainCamera;
         cameraMoveSpeed = gameController.cameraMoveSpeed;
@@ -60,17 +63,10 @@ public class CardBoosterController : MonoBehaviour
 
 
     private void AddCards(){
+        int spawnIndex = 1;
+        foreach(CardTemplate cardTemplate in genMapV2.RandomCards(3)){
 
-        for(float i = 1f; i < 4f; i++){
-
-            Transform spawn = transform.Find($"CS{i}");
-            (Rarity, int) values = gameController.RandomItem("Card");
-
-            Rarity rarity = values.Item1;
-            int index = values.Item2;
-
-            CardTemplate cardTemplate = gameController.ItemWeights[rarity].Item2[index];
-            gameController.ItemWeights[rarity].Item2.RemoveAt(index);
+            Transform spawn = transform.Find($"CS{spawnIndex}");
 
             GameObject card = GameObject.Instantiate(gameController.cardPrefab, spawn.position, Quaternion.identity * Quaternion.Euler(0,180,0));
             card.transform.SetParent(spawn);
@@ -78,8 +74,9 @@ public class CardBoosterController : MonoBehaviour
             card.GetComponent<CardController>().boosterCard = true;
             card.GetComponent<BoxCollider>().enabled = false;
             card.GetComponent<CardController>().SetupCard(ObjectState.Booster);
+
+            spawnIndex++;
         }
-        
     }
 
 

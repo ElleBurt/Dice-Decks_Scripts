@@ -8,6 +8,7 @@ public class DiceBoxController : MonoBehaviour
 {
     private GameController gameController;
     private DiceRoller diceRoller;
+    private GenMapV2 genMapV2;
 
     public bool fromMarket = false;
 
@@ -15,35 +16,27 @@ public class DiceBoxController : MonoBehaviour
 
         gameController = FindObjectOfType<GameController>();
         diceRoller = FindObjectOfType<DiceRoller>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
 
         gameController.SetItemWeights();
         
     }
 
     private void SpawnDice(){
+        int spawnIndex = 1;
+        foreach(DiceTemplate diceTemplate in genMapV2.RandomDice(3)){
 
-        for(int i = 0; i < 3; i++){
+            Transform spawn = transform.Find($"CS{spawnIndex}");
 
-            //gets the relative spawnPos for the dice
-            Transform spawn = transform.Find($"DSP{i+1}");
-
-            (Rarity, int) values = gameController.RandomItem("Dice");
-
-            Rarity rarity = values.Item1;
-            int index = values.Item2;
-
-            //gets a random dice template from the dict of rarities and templates
-            DiceTemplate diceTemp = gameController.ItemWeights[rarity].Item1[index];
-
-            gameController.ItemWeights[rarity].Item1.RemoveAt(index);
-
-            GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position ,Quaternion.identity);
+            GameObject Dice = GameObject.Instantiate(diceTemplate.dice,spawn.position ,Quaternion.identity);
             Dice.transform.SetParent(spawn);
-            Dice.GetComponent<DiceRoll>().diceTemplate = diceTemp;
+            Dice.GetComponent<DiceRoll>().diceTemplate = diceTemplate;
             Rigidbody rb = Dice.GetComponent<Rigidbody>();
             Dice.transform.rotation = new Quaternion(0,0,0,0);
             rb.isKinematic = true;
             spawn.GetComponent<DiceDisplay>().DiceAdded(Dice, ObjectState.Booster);
+
+            spawnIndex++;
         }
         gameController.MoveCameraTo(gameController.DiceView,Vector3.zero,GameController.currentStage.DiceTray);
     }

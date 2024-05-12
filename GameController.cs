@@ -24,23 +24,23 @@ public class GameController : MonoBehaviour
     public float TokenMoveSpeed;
     public GameObject ScrollPre;
     public GameObject PlayerTokenPrefab;
-    GenMap genMap;
+    GenMapV2 genMap;
     GameObject PlayerToken;
     MapEvents mapEvents;
 
     [Header("Event")]
-    public List<MapEventTemplate> Events = new List<MapEventTemplate>();
+    public List<MapEventTemplate> Events = new List<MapEventTemplate>();  //move to resources
 
     [Header("Items")]
     
-    public GameObject cardPrefab;
+    public GameObject cardPrefab; //move to resources
     CardHolder cardHolder;
 
-    public List<DiceTemplate> DiceTemplates = new List<DiceTemplate>();
+    public List<DiceTemplate> DiceTemplates = new List<DiceTemplate>(); //move to resources
 
-    public List<CardTemplate> CardTemplates = new List<CardTemplate>();
+    public List<CardTemplate> CardTemplates = new List<CardTemplate>(); //move to resources
 
-    public List<BoosterTemplate> boosters = new List<BoosterTemplate>();
+    public List<BoosterTemplate> boosters = new List<BoosterTemplate>(); //move to resources
 
     public List<GameObject> DiceHeld = new List<GameObject>();
     public List<GameObject> CardsHeld = new List<GameObject>();
@@ -104,14 +104,13 @@ public class GameController : MonoBehaviour
         {Rarity.Common,6},
     };
     
-    //public Dictionary<Rarity,List<CardTemplate>> cardWeights = new Dictionary<Rarity,List<CardTemplate>>();
 
     public GameObject sceneLights;
 
     public GameObject coinPrefab;
 
 
-    public List<int> diceResults = new List<int>();
+    public List<int> diceResults = new List<int>(); //move to Score?
 
     ScoreCards scoreCards;
 
@@ -291,7 +290,7 @@ public class GameController : MonoBehaviour
     {
         //get all scripts
         mainCamera = FindObjectOfType<Camera>();
-        genMap = FindObjectOfType<GenMap>();       
+        genMap = FindObjectOfType<GenMapV2>();       
         diceRoller = FindObjectOfType<DiceRoller>();
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
         mapEvents = FindObjectOfType<MapEvents>();
@@ -308,7 +307,7 @@ public class GameController : MonoBehaviour
         UpdateHealth(MaxHealth,false);
         Scroll = GameObject.Instantiate(ScrollPre, new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
-        genMap.IconGeneration();
+        genMap.GenMapV2Init();
         MoveCameraTo(lastIconTransform,new Vector3(0,13,-5),GameController.currentStage.MapView);
 
         
@@ -322,6 +321,9 @@ public class GameController : MonoBehaviour
     {
         if(Input.GetKeyDown(KeyCode.K)){
             GameStarted();
+        }
+        if(Input.GetKeyDown(KeyCode.I)){
+            FindObjectOfType<GenMapV2>().GenMapV2Init();
         }
         if(Input.mouseScrollDelta.y != 0){
 
@@ -460,7 +462,7 @@ public class GameController : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        genMap.clearEnviro();
+        //genMap.clearEnviro();
         genMap.displayIcons(false);
 
         yield return new WaitForSeconds(0.2f);
@@ -512,7 +514,7 @@ public class GameController : MonoBehaviour
     public IEnumerator DropPlayerToken(){
         float TimeValue = 2f;
         float Elapsed = 0f;
-        genMap.HighlightPaths(lastIconTransform);
+        //genMap.HighlightPaths(lastIconTransform);
         
         
         Vector3 tokenOffset = lastIconTransform.position;
