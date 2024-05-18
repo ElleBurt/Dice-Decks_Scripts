@@ -11,14 +11,14 @@ public class DiceHeldInfoScript : MonoBehaviour
     public Color cantSellColor;
     public bool selected = false;
 
-    GameController gameController;
+    private GenMapV2 genMapV2;
 
     DiceDisplay diceDisplay;
 
     private GameObject dice;
 
     void Start(){
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         transform.GetChild(0).GetComponent<TMP_Text>().color = cantSellColor;
     }
 
@@ -47,8 +47,8 @@ public class DiceHeldInfoScript : MonoBehaviour
                     foreach(Transform slot in GameObject.Find("diceDisplay").transform){
                         if(slot.childCount == 0){
                             slot.GetComponent<DiceDisplay>().DiceAdded(dice, ObjectState.Sell);
-                            gameController.UpdateMoney(dice.GetComponent<DiceRoll>().diceTemplate.basePrice, true);
-                            gameController.DiceHeld.Add(dice);
+                            genMapV2.UpdateMoney(dice.GetComponent<DiceRoll>().diceTemplate.basePrice, true);
+                            genMapV2.DiceHeld.Add(dice);
                             diceDisplay.dice.gameObject.GetComponent<MeshCollider>().enabled = true;
                             diceDisplay.dice = null;
                             if(diceDisplay.openDesc != null){
@@ -62,12 +62,12 @@ public class DiceHeldInfoScript : MonoBehaviour
 
                 case ObjectState.Sell:
 
-                    gameController.UpdateMoney( int.Parse(Regex.Replace(transform.GetChild(0).GetComponent<TMP_Text>().text, @"\D","")) , false);
+                    genMapV2.UpdateMoney( int.Parse(Regex.Replace(transform.GetChild(0).GetComponent<TMP_Text>().text, @"\D","")) , false);
 
                     diceDisplay.Selected = false;
                     diceDisplay.MouseOver = false;
 
-                    gameController.DiceHeld.Remove(diceDisplay.dice.gameObject);
+                    genMapV2.DiceHeld.Remove(diceDisplay.dice.gameObject);
                     
                     Destroy(diceDisplay.openDesc);
                     Destroy(dice, 0.3f);

@@ -11,7 +11,7 @@ using UnityEngine.EventSystems;
 
 public class CardController : MonoBehaviour, IPointerClickHandler
 {
-    public GameController gameController;
+    public GenMapV2 genMapV2;
     public CardTemplate cardTemplate;
     public DiceRoller diceRoller;
 
@@ -71,7 +71,7 @@ public class CardController : MonoBehaviour, IPointerClickHandler
         effectImage = transform.GetChild(0).Find("Effect").GetComponent<Image>();
         cardMat = gameObject.GetComponent<MeshRenderer>().material;
 
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         diceRoller = FindObjectOfType<DiceRoller>();
 
         cardHolder = FindObjectOfType<CardHolder>();
@@ -104,15 +104,15 @@ public class CardController : MonoBehaviour, IPointerClickHandler
 
         if(clicked && itemsHovered.Contains(transform.GetChild(0).Find("Banner").gameObject)){
 
-            if(state == ObjectState.Buy && gameController.MoneyHeld >= cardTemplate.basePrice){
+            if(state == ObjectState.Buy && genMapV2.totalMoneyHeld >= cardTemplate.basePrice){
 
-                gameController.UpdateMoney(cardTemplate.basePrice, true);
+                genMapV2.UpdateMoney(cardTemplate.basePrice, true);
                 cardHolder.CardAdded(cardTemplate);
                 Destroy(gameObject,0.3f);
 
             }else if(state == ObjectState.Sell){
 
-                gameController.UpdateMoney(SellValue, false);
+                genMapV2.UpdateMoney(SellValue, false);
                 cardHolder.CardRemoved(gameObject);
             }
 
@@ -137,12 +137,12 @@ public class CardController : MonoBehaviour, IPointerClickHandler
     }
 
     private void FixedUpdate() {
-        EldritchRageBonus = gameController.DiceHeld.Count * 3;
-        StrengthRitualBonus = gameController.DiceHeld.Count * 6;
-        DefenceForceBonus = gameController.HitsTaken;
-        MilitaryInvestmentBonus = gameController.EnemiesKilled * 3;
-        PlagueDoctorBonus = Mathf.FloorToInt(gameController.MoneyHeld / 3);
-        EconomicsBonus = Mathf.FloorToInt(gameController.MoneyHeld / 4);
+        EldritchRageBonus = genMapV2.DiceHeld.Count * 3;
+        StrengthRitualBonus = genMapV2.DiceHeld.Count * 6;
+        DefenceForceBonus = genMapV2.totalHitsTaken;
+        MilitaryInvestmentBonus = genMapV2.totalEnemiesKilled * 3;
+        PlagueDoctorBonus = Mathf.FloorToInt(genMapV2.totalMoneyHeld / 3);
+        EconomicsBonus = Mathf.FloorToInt(genMapV2.totalMoneyHeld / 4);
 
         switch(cardTemplate.cardType){
             case CardType.EldritchRage:

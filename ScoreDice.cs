@@ -12,7 +12,7 @@ public class ScoreDice : MonoBehaviour
     DiceRoller diceRoller;
     Score scoreScript;
     MapEvents events;
-    GameController gameController;
+    GenMapV2 genMapV2;
 
     private Dictionary<DiceType, Action<string>> Processes;
     private MiniScript SelectedEncounter;
@@ -41,7 +41,7 @@ public class ScoreDice : MonoBehaviour
         diceRoller = FindObjectOfType<DiceRoller>();
         scoreScript = FindObjectOfType<Score>();
         events = FindObjectOfType<MapEvents>();
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         diceScorePosStart = diceScorePos.position;
        
     }
@@ -185,7 +185,7 @@ public class ScoreDice : MonoBehaviour
 
 
     private void Basic(string value){
-        gameController.diceResults.Add(int.Parse(value));
+        scoreScript.diceResults.Add(int.Parse(value));
         //sets the scoreText to the new score
         StartCoroutine(scoreScript.UpdateScore(int.Parse(value)));
     }
@@ -247,7 +247,7 @@ public class ScoreDice : MonoBehaviour
         switch(UnityEngine.Random.Range(1,4)){
             case 1:
                 int moneyStolen = UnityEngine.Random.Range(1,6);
-                gameController.UpdateMoney(moneyStolen, true);
+                genMapV2.UpdateMoney(moneyStolen, true);
             break;
 
             case 2:
@@ -257,7 +257,7 @@ public class ScoreDice : MonoBehaviour
 
             default:
                 int healthStolen = UnityEngine.Random.Range(1,6);
-                gameController.UpdateHealth(healthStolen, true);
+                genMapV2.UpdateHealth(healthStolen, true);
             break;
 
         }
@@ -306,12 +306,12 @@ public class ScoreDice : MonoBehaviour
         switch(value){
             case "Voodoo":
                 int healthStolen = UnityEngine.Random.Range(1,4);
-                gameController.UpdateHealth(healthStolen, true);
+                genMapV2.UpdateHealth(healthStolen, true);
                 StartCoroutine(scoreScript.UpdateScore(-healthStolen));
             break;
             case "Clover":
                 int moneyGiven = UnityEngine.Random.Range(1,4);
-                gameController.UpdateMoney(moneyGiven, false);
+                genMapV2.UpdateMoney(moneyGiven, false);
                 Basic($"{moneyGiven}");
             break;
         }

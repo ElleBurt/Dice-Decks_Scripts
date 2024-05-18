@@ -16,15 +16,15 @@ public class CardHolder : MonoBehaviour
     public TMP_Text CardCount;
     public int maxCards;
     public float cardWidth;
-    GameController gameController;
+    private GenMapV2 genMapV2;
 
     public GameObject CardPrefab;
 
     
     void Start()
     {   //sets card count to however many are held
-        gameController = FindObjectOfType<GameController>();
-        CardCount.text = gameController.CardsHeld.Count.ToString() + "/" + maxCards.ToString();
+        genMapV2 = FindObjectOfType<GenMapV2>();
+        CardCount.text = genMapV2.CardsHeld.Count.ToString() + "/" + maxCards.ToString();
         spawnPoint = gameObject.transform.position;
     }
 
@@ -32,28 +32,28 @@ public class CardHolder : MonoBehaviour
     //called when card added to see if too many or not, also make new card and show it and edit text display of how many in hand
     public void CardAdded(CardTemplate cardTemplate){
 
-        if(gameController.CardsHeld.Count < maxCards){
+        if(genMapV2.CardsHeld.Count < maxCards){
             GameObject card = GameObject.Instantiate(CardPrefab, spawnPoint, Quaternion.identity * Quaternion.Euler(-15,-185,0));
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
             card.GetComponent<CardController>().SetupCard(ObjectState.Sell);
             card.GetComponent<CardController>().setState(ObjectState.Sell);
             card.transform.SetParent(transform);
-            gameController.CardsHeld.Add(card);
+            genMapV2.CardsHeld.Add(card);
             CardsUpdated();
         }
     }
 
     public void CardRemoved(GameObject card){
-        gameController.CardsHeld.Remove(card);
+        genMapV2.CardsHeld.Remove(card);
         Destroy(card,0.3f);
         CardsUpdated();
     }
 
     //move cards according to when they should be with new values
     void CardsUpdated(){
-        CardCount.text = gameController.CardsHeld.Count.ToString() + "/" + maxCards.ToString();
+        CardCount.text = genMapV2.CardsHeld.Count.ToString() + "/" + maxCards.ToString();
         int cardNum = 0;
-        foreach(GameObject card in gameController.CardsHeld){
+        foreach(GameObject card in genMapV2.CardsHeld){
 
             Vector3 newPos = new Vector3(spawnPoint.x + (cardNum * cardWidth), spawnPoint.y, spawnPoint.z);
             card.transform.position = newPos;

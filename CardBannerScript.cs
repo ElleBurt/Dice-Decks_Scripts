@@ -9,14 +9,14 @@ public class CardBannerScript : MonoBehaviour
     CardHover cardHover;
     private Transform Card;
     private CardController cardController;
-    private GameController gameController;
+    private GenMapV2 genMapV2;
 
     public bool clicked = false;
 
     void Awake(){
         Card = transform.parent.parent; 
         cardController = Card.GetComponent<CardController>();
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         
         
     }
@@ -24,10 +24,10 @@ public class CardBannerScript : MonoBehaviour
     void OnMouseDown(){
         cardHover = Card.parent.GetComponent<CardHover>();
         if(clicked){
-            if(cardHover.state == ObjectState.Buy && gameController.MoneyHeld >= cardController.cardTemplate.basePrice){
-                gameController.UpdateMoney(cardController.cardTemplate.basePrice, true);
+            if(cardHover.state == ObjectState.Buy && genMapV2.totalMoneyHeld >= cardController.cardTemplate.basePrice){
+                genMapV2.UpdateMoney(cardController.cardTemplate.basePrice, true);
             }else if(cardHover.state == ObjectState.Sell){
-                gameController.UpdateMoney(cardController.SellValue, false);
+                genMapV2.UpdateMoney(cardController.SellValue, false);
             }
         }
 

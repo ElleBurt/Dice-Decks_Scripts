@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class CampFireController : MonoBehaviour, EventMedium
 {   
-    private GameController gameController;
+    private GenMapV2 genMapV2;
     private MapEvents mapEvents;
     public int totalHDice = 1;
     public GameObject healDice;
@@ -31,7 +31,7 @@ public class CampFireController : MonoBehaviour, EventMedium
     
 
     void Start(){
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         mapEvents = FindObjectOfType<MapEvents>();
         scoreScript = FindObjectOfType<Score>();
         diceRoller = FindObjectOfType<DiceRoller>();
@@ -185,7 +185,7 @@ public class CampFireController : MonoBehaviour, EventMedium
 
         if (diceProcessed == totalHDice){
             
-            gameController.UpdateHealth(totalHealed,false);
+            genMapV2.UpdateHealth(totalHealed,false);
             totalHealed = 0;
             diceProcessed = 0;
             scoreScript.score = 0;

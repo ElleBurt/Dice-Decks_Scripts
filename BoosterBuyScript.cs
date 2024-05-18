@@ -10,12 +10,12 @@ public class BoosterBuyScript : MonoBehaviour
     public Color cantSellColor;
     public bool selected = false;
 
-    GameController gameController;
+    private GenMapV2 genMapV2;
     BoosterHover boosterHover;
     MapEvents mapEvents;
 
     void Start(){
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         mapEvents = FindObjectOfType<MapEvents>();
         transform.GetChild(0).GetComponent<TMP_Text>().color = cantSellColor;
     }
@@ -37,9 +37,9 @@ public class BoosterBuyScript : MonoBehaviour
         boosterHover = transform.parent.parent.GetComponent<BoosterHover>();
         string boosterType = boosterHover.boosterTemp.name;
         
-        if(selected && gameController.MoneyHeld >= boosterHover.boosterTemp.basePrice){
+        if(selected && genMapV2.totalMoneyHeld >= boosterHover.boosterTemp.basePrice){
 
-            gameController.UpdateMoney(boosterHover.boosterTemp.basePrice, true);
+            genMapV2.UpdateMoney(boosterHover.boosterTemp.basePrice, true);
 
             if(boosterType == "DiceBooster"){
                 mapEvents.SpawnDiceBox(true);

@@ -32,7 +32,10 @@ public class mapDecals : MonoBehaviour
         */
     }
 
-    //icon get bigger or icon get smaller me thinks this explains itself
+    void OnMouseDown(){
+        StartCoroutine(genMap.IconSelected(transform));
+    }
+
     void OnMouseOver(){
         transform.localScale = new Vector3(1,1,1)*1.25f;
         active = true;

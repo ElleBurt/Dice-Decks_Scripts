@@ -16,7 +16,7 @@ public class MapEvents : MonoBehaviour {
     public Vector3 BoosterSpawnPosition;
     public Vector3 DiceBagSpawnPosition;
     private GameObject Scroll;
-    private GameController gameController;
+    private GenMapV2 genMapV2;
     private DiceRoller diceRoller;
     private GameObject currentEevnt;
     private GameObject currentScene;
@@ -39,7 +39,7 @@ public class MapEvents : MonoBehaviour {
 
 
     void Start(){
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         genMap = FindObjectOfType<GenMap>();
         diceRoller = FindObjectOfType<DiceRoller>();
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
@@ -58,20 +58,20 @@ public class MapEvents : MonoBehaviour {
     }
 
     public void SpawnBooster(bool fromMarket){
-        gameController.MoveCameraTo(gameController.DiceView,Vector3.zero,GameController.currentStage.DiceTray);
+        genMapV2.MoveCameraTo(genMapV2.DiceView,false);
         GameObject cardPack = GameObject.Instantiate(CardPack, BoosterSpawnPosition, Quaternion.identity * Quaternion.Euler(0,270,0));
         cardPack.GetComponent<CardBoosterController>().fromMarket = fromMarket;
     }
 
     public void SpawnDiceBox(bool fromMarket){
-        gameController.MoveCameraTo(gameController.DiceView,Vector3.zero,GameController.currentStage.DiceTray);
+        genMapV2.MoveCameraTo(genMapV2.DiceView,false);
         GameObject diceBox = GameObject.Instantiate(DiceBox, DiceBagSpawnPosition, Quaternion.identity * Quaternion.Euler(0,90,0));
         diceBox.GetComponent<DiceBoxController>().fromMarket = fromMarket;
     }
 
 
 
-
+    /*
     public void SelectMiniToAttack(GameObject encounter){
         
         foreach(GameObject mini in GameObject.FindGameObjectsWithTag("Encounter")){
@@ -86,9 +86,9 @@ public class MapEvents : MonoBehaviour {
         activeSword = sword;
     }
 
-
+     
     public IEnumerator SpawnEnemy(int CurrentRound){
-        gameController.changeLights(Color.red);
+        genMapV2.changeLights(Color.red);
 
         yield return new WaitForSeconds(1f);
 
@@ -137,10 +137,10 @@ public class MapEvents : MonoBehaviour {
             SelectMiniToAttack(newEnemy);
         }
     }
+    */
 
 
-
-    private static bool isInRange(int currentRound, EnemyDiff enemyDiff){
+    private static bool isInRange(float currentRound, EnemyDiff enemyDiff){
         if(currentRound < 5 && enemyDiff == EnemyDiff.Easy){
             return true;
         }else if(currentRound > 4 && currentRound < 9 && enemyDiff == EnemyDiff.Medium){
@@ -199,7 +199,7 @@ public class MapEvents : MonoBehaviour {
 
     }
 
-
+    /* 
     public IEnumerator MiniDamaged(int DmgDealt){
 
         yield return new WaitForSeconds(0.2f);
@@ -214,8 +214,8 @@ public class MapEvents : MonoBehaviour {
         }else{
             yield return new WaitForSeconds(1f);
 
-            gameController.UpdateMoney(SelectedEncounter.GetComponent<MiniScript>().enemyTemplate.MoneyGain,false);
-            gameController.EnemiesKilled++;
+            genMapV2.UpdateMoney(SelectedEncounter.GetComponent<MiniScript>().enemyTemplate.MoneyGain,false);
+            genMapV2.EnemiesKilled++;
             scoreCards.ScoreAnim(CardType.MilitaryInvestment);
 
             Destroy(SelectedEncounter,0.5f);
@@ -237,10 +237,10 @@ public class MapEvents : MonoBehaviour {
         foreach(GameObject enemy in GameObject.FindGameObjectsWithTag("Encounter")){
             Damage += enemy.GetComponent<MiniScript>().enemyTemplate.atkPower;
         }
-        gameController.UpdateHealth(Damage,true);
+        genMapV2.UpdateHealth(Damage,true);
 
         scoreCards.ScoreAnim(CardType.DefenceForce);
-        gameController.HitsTaken++;
+        genMapV2.HitsTaken++;
     }
 
     private IEnumerator SpinSword(GameObject sword){
@@ -249,7 +249,7 @@ public class MapEvents : MonoBehaviour {
             yield return null;
         }
     }
-
+    */
 
     public IEnumerator ActivateEvent(){
         yield return new WaitForSeconds(3f);
@@ -260,7 +260,7 @@ public class MapEvents : MonoBehaviour {
 
     public IEnumerator EventEnded(){
 
-        gameController.changeLights(new Color32((byte)255,(byte)196,(byte)76,(byte)255));
+        genMapV2.changeLights(new Color32((byte)255,(byte)196,(byte)76,(byte)255));
 
         if(currentEevnt != null){
             StartCoroutine(DropEvent(currentEevnt, currentEevnt.transform.position));
@@ -282,6 +282,6 @@ public class MapEvents : MonoBehaviour {
         
         
 
-        gameController.RoundConclusion();
+        genMapV2.RoundConclusion();
     }
 }

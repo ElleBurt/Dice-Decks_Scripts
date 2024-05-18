@@ -7,19 +7,25 @@ using System.Linq;
 
 public class MiniScript : MonoBehaviour
 {
+    private EnemyController eCtrl;
     public bool selected = false;
 
-    public EnemyTemplate enemyTemplate;
+    
 
+    //stats
     public float CurrentHealth;
     public float MaxHealth;
-
-    private GameObject Health;
-
-    MapEvents mapEvents;
+    public string diffTier;
+    public int AttackPower;
+    public int MoneyGain;
+    public string eName;
     public int TickDamage;
     public string EffectInflicted;
+    public float height;
+    public float width;
 
+    // UI elements
+    private GameObject Health;
     private GameObject UI;
     private GameObject healthBar;
     private Slider slider;
@@ -32,11 +38,11 @@ public class MiniScript : MonoBehaviour
     public void SetupMini(){
         GameObject EnemyInfo = GameObject.Instantiate(Resources.Load<GameObject>("UI/Prefabs/EnemyInfo"));
         EnemyInfo.transform.SetParent(transform);
-        EnemyInfo.GetComponent<RectTransform>().anchoredPosition = Vector3.zero + new Vector3(0,enemyTemplate.height,0);
+        EnemyInfo.GetComponent<RectTransform>().anchoredPosition = Vector3.zero + new Vector3(0,height,0);
         EnemyInfo.GetComponent<RectTransform>().localEulerAngles = new Vector3(0,90,0);
         EnemyInfo.transform.name = "EnemyInfo";
 
-        mapEvents = FindObjectOfType<MapEvents>();
+        eCtrl = FindObjectOfType<EnemyController>();
         UI = transform.Find("EnemyInfo").gameObject;
         textName = UI.transform.Find("Name").gameObject.GetComponent<TMP_Text>();
         healthBar = UI.transform.Find("HealthBar").gameObject;
@@ -45,57 +51,27 @@ public class MiniScript : MonoBehaviour
         atkIndicator = UI.transform.Find("DMG").gameObject.GetComponent<TMP_Text>();
         diffIndicator = UI.transform.Find("Diff").gameObject.GetComponent<TMP_Text>();
 
-        CurrentHealth = enemyTemplate.MaxHealth;
-        MaxHealth = enemyTemplate.MaxHealth;
+        CurrentHealth = MaxHealth;
+        MaxHealth = MaxHealth;
         slider.maxValue = MaxHealth;
         slider.value = MaxHealth;
-        textName.text = enemyTemplate.name;
+        textName.text = eName;
         healthStats.text = $"{CurrentHealth} / {MaxHealth}";
-        diffIndicator.text = $"{translateDiff()}";
-        atkIndicator.text = $"{enemyTemplate.atkPower}";
-    }
-
-    Dictionary <string, int> romanNumbersDictionary = new Dictionary <string, int>(){
-        {"I",1}, {"IV",4}, {"V",5}, {"IX",9}, {"X",10}, {"XL",40}, {"L",50}
-    };
-
-    public string translateDiff(){
-        string romanResult = "";
-
-        int num = (int)enemyTemplate.enemyDiff;
-
-       foreach(KeyValuePair<string, int> item in romanNumbersDictionary.Reverse()) {
-            if (num <= 0) break;
-            while (num >= item.Value) {
-                romanResult += item.Key;
-                num -= item.Value;
-            }
-        }
-        return romanResult;
-    }
-
-
-    public void TickDamageInflicted(){
-        UpdateHealth(TickDamage,true);
-        if(mapEvents.SelectedMiniDied){
-            StartCoroutine(mapEvents.MiniDamaged(0));
-        }
+        diffIndicator.text = diffTier;
+        atkIndicator.text = $"{AttackPower}";
     }
 
     
     void OnMouseDown(){
-        mapEvents.SelectMiniToAttack(gameObject);
+        eCtrl.SelectEnemy(gameObject);
     }
 
     public void UpdateHealth(float ChangeFactor, bool Damaged){
 
         //ternary opperator for knowing if to add or subtract health
         float NewHealth = Damaged ? CurrentHealth -= ChangeFactor : CurrentHealth += ChangeFactor;
+        CurrentHealth = NewHealth < 0 ? 0 : NewHealth;
         StartCoroutine(HealthAnim(NewHealth));
-        if(NewHealth <= 0){
-            mapEvents.SelectedMiniDied = true;
-        }
-        CurrentHealth = NewHealth;
         healthStats.text = $"{CurrentHealth} / {MaxHealth}";
         
     }

@@ -8,7 +8,7 @@ using System.Linq;
 
 public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHandler
 {
-    private GameController gameController;
+    private GenMapV2 genMapV2;
     private MapEvents mapEvents;
     private DiceRoller diceRoller;
     private CardHolder cardHolder;
@@ -30,83 +30,74 @@ public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHa
 
     void Awake(){
         mapEvents = FindObjectOfType<MapEvents>();
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         diceRoller = FindObjectOfType<DiceRoller>();
         cardHolder = FindObjectOfType<CardHolder>();
     }
 
     public void ExecuteEvent(){
-        
-        gameController.SetItemWeights();
         SpawnDice();
         SpawnCards();
         SpawnBoosters();
-        gameController.MoveCameraTo(transform.Find("MarketTableView"),Vector3.zero,GameController.currentStage.Market);
+        genMapV2.MoveCameraTo(transform.Find("MarketTableView"),false);
     }
 
     private void SpawnDice(){
 
-        for(int i = 1; i < 5; i++){
+        int spawnIndex = 1;
+        foreach(DiceTemplate diceTemplate in genMapV2.RandomDice(3)){
 
-            //gets the relative spawnPos for the dice
-            Transform spawn = transform.Find($"DicePos{i}_buy");
+            Transform spawn = transform.Find($"DS{spawnIndex}");
 
-            (Rarity, int) values = gameController.RandomItem("Dice");
-
-            Rarity rarity = values.Item1;
-            int index = values.Item2;
-
-            //gets a random dice template from the dict of rarities and templates
-            DiceTemplate diceTemp = gameController.ItemWeights[rarity].Item1[index];
-
-            gameController.ItemWeights[rarity].Item1.RemoveAt(index);
-
-            GameObject Dice = GameObject.Instantiate(diceTemp.dice,spawn.position,Quaternion.identity);
-            Dice.GetComponent<DiceRoll>().diceTemplate = diceTemp;
-            spawn.GetComponent<DiceDisplay>().DiceAdded(Dice, ObjectState.Buy);
-            Dice.GetComponent<MeshCollider>().enabled = false;
-            Rigidbody rb = Dice.GetComponent<Rigidbody>();
-            rb.isKinematic = true;
+            GameObject Dice = GameObject.Instantiate(diceTemplate.dice,spawn.position ,Quaternion.identity);
             Dice.transform.SetParent(spawn);
+            Dice.GetComponent<DiceRoll>().diceTemplate = diceTemplate;
+            Rigidbody rb = Dice.GetComponent<Rigidbody>();
+            Dice.transform.rotation = new Quaternion(0,0,0,0);
+            rb.isKinematic = true;
+            spawn.GetComponent<DiceDisplay>().DiceAdded(Dice, ObjectState.Buy);
+
+            spawnIndex++;
         }
+
+        
     }
 
     private void SpawnCards(){
+        int spawnIndex = 1;
+        foreach(CardTemplate cardTemplate in genMapV2.RandomCards(3)){
 
-        for(float i = 1f; i < 4f; i++){
+            Transform spawn = transform.Find($"CS{spawnIndex}");
 
-            Transform spawn = transform.Find($"CardPos{i}_buy");
-
-            (Rarity, int) values = gameController.RandomItem("Card");
-
-            Rarity rarity = values.Item1;
-            int index = values.Item2;
-
-            CardTemplate cardTemplate = gameController.ItemWeights[rarity].Item2[index];
-            gameController.ItemWeights[rarity].Item2.RemoveAt(index);
-
-            GameObject card = GameObject.Instantiate(gameController.cardPrefab, spawn.position, Quaternion.Euler(-20,180,0));
+            GameObject card = GameObject.Instantiate(Resources.Load<GameObject>("Cards/Prefabs/CardBase"), spawn.position, Quaternion.identity * Quaternion.Euler(0,180,0));
             card.transform.SetParent(spawn);
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
             card.GetComponent<CardController>().basePos = spawn.position;
             card.GetComponent<BoxCollider>().enabled = false;
             card.GetComponent<CardController>().SetupCard(ObjectState.Buy);
             card.GetComponent<CardController>().setState(ObjectState.Buy);
+
+            spawnIndex++;
         }
         
     }
 
     private void SpawnBoosters(){
+        
+        int spawnIndex = 1;
+        foreach(BoosterTemplate boosterTemplate in genMapV2.RandomBooster(2)){
 
-        for (int i = 1; i < 3; i++){
-            BoosterTemplate boosterTemplate = gameController.boosters[Random.Range(0, gameController.boosters.Count)];
-            Transform spawn = transform.Find($"BoosterPos{i}_buy");
+            Transform spawn = transform.Find($"BS{spawnIndex}");
             spawn.GetComponent<BoosterHover>().boosterTemp = boosterTemplate;
-            GameObject boosterPack = GameObject.Instantiate(boosterTemplate.BoosterPrefab, spawn.position + boosterTemplate.positionOffset, Quaternion.Euler(290,0,90));
-            boosterPack.transform.SetParent(spawn);
-            spawn.GetComponent<BoosterHover>().Booster = boosterPack.transform;
-            spawn.GetComponent<BoosterHover>().baseRot = boosterPack.transform.rotation;
+
+            GameObject booster = GameObject.Instantiate(boosterTemplate.BoosterPrefab, spawn.position + boosterTemplate.positionOffset, Quaternion.Euler(290,0,90));
+            booster.transform.SetParent(spawn);
+            spawn.GetComponent<BoosterHover>().Booster = booster.transform;
+            spawn.GetComponent<BoosterHover>().baseRot = booster.transform.rotation;
+
+            spawnIndex++;
         }
+        
     }
     
      
@@ -126,7 +117,7 @@ public class MarketEventController : MonoBehaviour, EventMedium, IPointerClickHa
         
         if(SelectedItem.name == "deskbell"){
 
-            gameController.MoveCameraTo(gameController.DiceView,Vector3.zero,GameController.currentStage.DiceTray);
+            genMapV2.MoveCameraTo(genMapV2.DiceView,false);
             StartCoroutine(mapEvents.EventEnded());
             
         }

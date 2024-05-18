@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 public class GenMap : MonoBehaviour
 {   
-    
+    /* 
     [Header("General")]
     public int encounterCount;
     public Vector2 miniBossCount;
@@ -480,4 +480,5 @@ public class GenMap : MonoBehaviour
         
         Destroy(tree);
     }
+    */
 }

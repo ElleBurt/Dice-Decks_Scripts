@@ -4,27 +4,21 @@ using UnityEngine;
 
 public class CardBoosterController : MonoBehaviour
 {   
-    GameController gameController;
+    private GenMapV2 genMapV2;
     Camera mainCamera;
-    float cameraMoveSpeed;
     Transform MapView;
     public Vector3 cardSelectionPos;
     public int cardsReady = 0;
     CardHolder cardHolder;
 
-    GenMapV2 genMapV2;
 
     public bool fromMarket = false;
 
     void Awake(){
-        gameController = FindObjectOfType<GameController>();
         genMapV2 = FindObjectOfType<GenMapV2>();
         cardHolder = FindObjectOfType<CardHolder>();
-        mainCamera = gameController.mainCamera;
-        cameraMoveSpeed = gameController.cameraMoveSpeed;
-        MapView = gameController.MapView;
-
-        gameController.SetItemWeights();
+        mainCamera = genMapV2.mainCamera;
+        MapView = genMapV2.MapView;
         
         AddCards();
     } 
@@ -49,9 +43,9 @@ public class CardBoosterController : MonoBehaviour
 
 
         if(fromMarket){
-            gameController.MoveCameraTo(GameObject.Find("MarketTableView").transform,Vector3.zero,GameController.currentStage.Market);
+            genMapV2.MoveCameraTo(GameObject.Find("MarketTableView").transform,false);
         }else{
-            gameController.RoundConclusion();
+            genMapV2.RoundConclusion();
         }
         
         
@@ -68,7 +62,7 @@ public class CardBoosterController : MonoBehaviour
 
             Transform spawn = transform.Find($"CS{spawnIndex}");
 
-            GameObject card = GameObject.Instantiate(gameController.cardPrefab, spawn.position, Quaternion.identity * Quaternion.Euler(0,180,0));
+            GameObject card = GameObject.Instantiate(Resources.Load<GameObject>("Cards/Prefabs/CardBase"), spawn.position, Quaternion.identity * Quaternion.Euler(0,180,0));
             card.transform.SetParent(spawn);
             card.GetComponent<CardController>().cardTemplate = cardTemplate;
             card.GetComponent<CardController>().boosterCard = true;

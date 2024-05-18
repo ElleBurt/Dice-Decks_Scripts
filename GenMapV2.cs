@@ -50,10 +50,11 @@ public class GenMapV2 : MonoBehaviour
     };
 
     //camera Properties
-    private Transform DiceView;
-    private Transform MapView;
+    public Transform DiceView;
+    public Transform MapView;
+    public Camera mainCamera;
     public Coroutine cameraMove;
-    private Camera mainCamera;
+    
 
     //game object references
     private GameObject PlayerToken;
@@ -77,27 +78,28 @@ public class GenMapV2 : MonoBehaviour
     public int currentRow;
     private float randomAidBias;
 
-    private List<GameObject> DiceHeld = new List<GameObject>();
-    private List<GameObject> CardsHeld = new List<GameObject>();
+    public List<GameObject> DiceHeld = new List<GameObject>();
+    public List<GameObject> CardsHeld = new List<GameObject>();
 
     public GameDifficulty gameDiff;
     public GameLength gameLength;
     public GameSpeed gameSpeed;
 
     //game stats
-    private int totalHitsTaken = 0;
-    private int totalDamageTaken = 0;
-    private int totalEnemiesKilled = 0;
-    private int totalMoneyHeld = 0;
+    public int totalHitsTaken = 0;
+    public int totalDamageTaken = 0;
+    public int totalEnemiesKilled = 0;
+    public int totalMoneyHeld = 0;
 
-    private float MaxHealth;
-    private float CurrentHealth;
+    public float MaxHealth;
+    public float CurrentHealth;
 
     //scripts
     private GameController gameController;
     private MapEvents mapEvents;
     private DiceRoller diceRoller;
     private CardHolder cardHolder;
+    private EnemyController eCtrl;
     
     //enviroment variables
     private TMP_Text HealthText;
@@ -160,9 +162,12 @@ public class GenMapV2 : MonoBehaviour
         diceRoller = FindObjectOfType<DiceRoller>();
         mapEvents = FindObjectOfType<MapEvents>();
         cardHolder = FindObjectOfType<CardHolder>();
+        eCtrl = FindObjectOfType<EnemyController>();
 
         HealthVile = GameObject.Find("HealthVile");
         HealthText = GameObject.Find("HealthCount").transform.GetChild(0).GetComponent<TMP_Text>();
+
+        MaxHealth = 35f;
 
         mainCamera = Camera.main;
     }
@@ -292,7 +297,7 @@ public class GenMapV2 : MonoBehaviour
             icon.GetComponent<Image>().color = Color.black;
             icon.transform.tag = name == "Start" || name == "Boss" ? name : "MapIcon";
 
-            icon.transform.name = icon.transform.name.Replace("(Clone)", "");
+            icon.transform.name = img.name;
 
         }
     }
@@ -309,16 +314,10 @@ public class GenMapV2 : MonoBehaviour
         float target = !show ? 0.0f : 255.0f;
         float fadeNum = show ? 0.0f : 255.0f;
 
-        if(show){
-            foreach(GameObject icon in icons){
-                StartCoroutine(FadeFactor(icon.transform.GetChild(0).GetComponent<Image>(),show));
-            }
-        }else{
-            foreach(GameObject icon in icons){
-                StartCoroutine(FadeFactor(icon.transform.GetChild(0).GetComponent<Image>(),show));
-            }
-            
+        foreach(GameObject icon in icons){
+            StartCoroutine(FadeFactor(icon.GetComponent<Image>(),show));
         }
+        
         
     }
 
@@ -401,6 +400,27 @@ public class GenMapV2 : MonoBehaviour
         return items;
     }
 
+    public List<BoosterTemplate> RandomBooster(int amount){
+
+        List<BoosterTemplate> items = new List<BoosterTemplate>();
+
+        for(int i = 0; i < amount; i++){
+            BoosterTemplate[] boosterTemplates = Resources.LoadAll<BoosterTemplate>($"Boosters");
+            List<BoosterTemplate> templates = boosterTemplates.ToList();
+
+            if(templates.Count > 0){
+                BoosterTemplate booster = templates[Random.Range(0, templates.Count)];
+                items.Add(booster);
+                break;
+            }else{
+                continue;
+            }
+            
+        }
+
+        return items;
+    }
+
     public void RoundConclusion(){
         currentRow++;
         Scroll = GameObject.Instantiate(Resources.Load<GameObject>("Scene/Prefab/Scroll"), new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
@@ -444,6 +464,88 @@ public class GenMapV2 : MonoBehaviour
             yield return null;
 
         }
+    }
+
+    public void UpdateMoney(int ammount, bool isBuying){
+
+        if(!isBuying){
+            bool corrupt = false;
+            GameObject cardTriggered = null;
+
+            foreach(GameObject card in CardsHeld){
+                if(card.GetComponent<CardController>().cardType == CardType.CorruptCoins){
+                    corrupt = true;
+                    cardTriggered = card;
+                }
+            }
+
+            for(int i = 0; i < ammount; i++){
+                int toAdd = corrupt ? Random.Range(1,4) == 3 ? 2 : 1 : 1;
+                
+                foreach(GameObject MoneyText in GameObject.FindGameObjectsWithTag("MoneyText")){
+                    TMP_Text textElem = MoneyText.GetComponent<TMP_Text>();
+                    textElem.text = $"${int.Parse(textElem.text.Substring(1)) + toAdd}";
+                    totalMoneyHeld = int.Parse(textElem.text.Substring(1));
+                }
+                
+            }
+
+            foreach(GameObject coinSpawn in GameObject.FindGameObjectsWithTag("CoinSpawn")){
+                if(coinSpawn.transform.parent.name == "MarketStand(Clone)"){
+                    StartCoroutine(dropCoins(ammount, coinSpawn, 0.5f));
+                }else{
+                    StartCoroutine(dropCoins(ammount, coinSpawn, 1f));
+                }
+                
+            }
+        }else{
+            foreach(GameObject MoneyText in GameObject.FindGameObjectsWithTag("MoneyText")){
+                TMP_Text textElem = MoneyText.GetComponent<TMP_Text>();
+                textElem.text = $"${int.Parse(textElem.text.Substring(1)) - ammount}";
+                totalMoneyHeld = int.Parse(textElem.text.Substring(1));
+            }
+        }
+        
+
+        
+    }
+
+    private IEnumerator dropCoins(int ammount, GameObject coinSpawn, float scaleFactor){
+        for(int i = 0; i < ammount; i++){
+            GameObject coin = GameObject.Instantiate(coinPrefab, coinSpawn.transform.position, Quaternion.identity);
+            coin.transform.localScale *= scaleFactor;
+            coin.transform.parent = coinSpawn.transform;
+            yield return new WaitForSeconds(0.2f);
+            Destroy(coin, 0.5f);
+        }
+    }
+
+    public void changeLights(Color newCol){
+         
+        foreach(Transform light in sceneLights.transform){
+            
+            Color Starter = light.gameObject.GetComponent<Light>().color;
+            Color AimCol = newCol;
+
+            StartCoroutine(lerpLights(light,Starter,AimCol));
+        }
+    }
+
+    private IEnumerator lerpLights(Transform light, Color Start, Color newCol){
+
+         float timeElapsed = 0f;
+         float duration = 2f;
+
+        while(timeElapsed < duration){
+
+            light.gameObject.GetComponent<Light>().color = Color.Lerp(Start,newCol, timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+
+        }
+
+        light.gameObject.GetComponent<Light>().color = newCol;
+        
     }
 
     public IEnumerator IconSelected(Transform icon){
@@ -533,15 +635,15 @@ public class GenMapV2 : MonoBehaviour
     public IEnumerator IconRoutine(string iconName){
         diceRoller.canRoll = false;
         switch(iconName){
-            case "Encounter":
-                StartCoroutine(mapEvents.SpawnEnemy(currentRow));
+            case "Skull":
+                eCtrl.SpawnEnemy(gameProgression);
             break;
 
-            case "Card Booster":
+            case "cardBooster":
                 mapEvents.SpawnBooster(false);
             break;
 
-            case "Dice Booster":
+            case "diceBooster":
                 mapEvents.SpawnDiceBox(false);
             break;
 
@@ -597,9 +699,7 @@ public class GenMapV2 : MonoBehaviour
             yield return null;
         }
 
-        if(!toMap){
-            Destroy(Scroll, 1f);
-        }else{
+        if(toMap){
             if(droppingToken != null){
                 StopCoroutine(droppingToken);
                 droppingToken = null;

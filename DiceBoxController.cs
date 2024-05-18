@@ -6,7 +6,6 @@ using UnityEngine.EventSystems;
 
 public class DiceBoxController : MonoBehaviour
 {
-    private GameController gameController;
     private DiceRoller diceRoller;
     private GenMapV2 genMapV2;
 
@@ -14,12 +13,9 @@ public class DiceBoxController : MonoBehaviour
 
     void Awake(){
 
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         diceRoller = FindObjectOfType<DiceRoller>();
         genMapV2 = FindObjectOfType<GenMapV2>();
-
-        gameController.SetItemWeights();
-        
     }
 
     private void SpawnDice(){
@@ -38,7 +34,7 @@ public class DiceBoxController : MonoBehaviour
 
             spawnIndex++;
         }
-        gameController.MoveCameraTo(gameController.DiceView,Vector3.zero,GameController.currentStage.DiceTray);
+        genMapV2.MoveCameraTo(genMapV2.DiceView,false);
     }
 
     public IEnumerator ThrowBox(){
@@ -55,9 +51,9 @@ public class DiceBoxController : MonoBehaviour
         yield return new WaitForSeconds(1);
 
         if(fromMarket){
-            gameController.MoveCameraTo(GameObject.Find("MarketTableView").transform,Vector3.zero,GameController.currentStage.Market);
+            genMapV2.MoveCameraTo(GameObject.Find("MarketTableView").transform,false);
         }else{
-            gameController.RoundConclusion();
+            genMapV2.RoundConclusion();
         }
         
         

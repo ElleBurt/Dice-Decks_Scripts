@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 public class DiceDisplay : MonoBehaviour
 {
-    private GameController gameController;
+    private GenMapV2 genMapV2;
     ScoreCards scoreCards;
 
     private Quaternion baseRot;
@@ -39,7 +39,7 @@ public class DiceDisplay : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
         scoreCards = FindObjectOfType<ScoreCards>();
     }
 
@@ -51,7 +51,7 @@ public class DiceDisplay : MonoBehaviour
             foreach(Transform slot in GameObject.Find("diceDisplay").transform){
                 if(slot.childCount == 0 && state == ObjectState.Booster){
                     slot.GetComponent<DiceDisplay>().DiceAdded(dice.gameObject, ObjectState.Sell);
-                    gameController.DiceHeld.Add(dice.gameObject);
+                    genMapV2.DiceHeld.Add(dice.gameObject);
                     dice = null;
                     if(openDesc != null){
                         Destroy(openDesc);

@@ -20,12 +20,9 @@ public class DiceRoller : MonoBehaviour
 
    private float forceX, forceY,forceZ;
 
-   Score score;
+   private Score score;
 
    public GameObject RollButton;
-
-   //public List<DiceTemplate> DiceBlueprints = new List<DiceTemplate>();
-   //public List<GameObject> DiceHeld = new List<GameObject>();
 
    //Spawn point and forces to apply and direction to apply them
    public Vector3 ForceDirection;
@@ -39,12 +36,12 @@ public class DiceRoller : MonoBehaviour
 
    public AudioClip diceHit;
 
-   GameController gameController;
+   private GenMapV2 genMapV2;
 
    //Finds score script and also adds all the dice slots to a list 
    void Awake(){
         score = FindObjectOfType<Score>();
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
 
         Transform DiceDisplay = GameObject.FindWithTag("DiceDisplay").transform;
 
@@ -59,7 +56,7 @@ public class DiceRoller : MonoBehaviour
         //gives you the starter 2x d6s 
         for(int i = 0; i < 2; i++){
 
-            AddDice(gameController.DiceTemplates[0]);
+            AddDice(Resources.Load<DiceTemplate>("Dice/Common/D6"));
             
         }
     
@@ -89,7 +86,7 @@ public class DiceRoller : MonoBehaviour
 
                 diceDisplay.DiceAdded(Dice,ObjectState.Sell);
 
-                gameController.DiceHeld.Add(Dice);
+                genMapV2.DiceHeld.Add(Dice);
 
                 slotFound = true;
             }
@@ -165,7 +162,7 @@ public class DiceRoller : MonoBehaviour
     //Coroutine to roll all dice types held
     IEnumerator RollDice(){
 
-        foreach (GameObject dice in gameController.DiceHeld){
+        foreach (GameObject dice in genMapV2.DiceHeld){
 
             string slot = dice.transform.parent.name;
 

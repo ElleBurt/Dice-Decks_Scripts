@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine.UI;
 using System.Linq;
 
+
 public enum ObjectState{
     None,
     Buy,
@@ -14,6 +15,7 @@ public enum ObjectState{
 
 public class GameController : MonoBehaviour
 {
+    /* 
     [Header("Camera Properties")]
     public Transform DiceView;
     public Transform MapView;
@@ -27,6 +29,7 @@ public class GameController : MonoBehaviour
     GenMapV2 genMap;
     GameObject PlayerToken;
     MapEvents mapEvents;
+    EnemyController eCtrl;
 
     [Header("Event")]
     public List<MapEventTemplate> Events = new List<MapEventTemplate>();  //move to resources
@@ -294,6 +297,7 @@ public class GameController : MonoBehaviour
         diceRoller = FindObjectOfType<DiceRoller>();
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
         mapEvents = FindObjectOfType<MapEvents>();
+        eCtrl = FindObjectOfType<EnemyController>();
         cardHolder = FindObjectOfType<CardHolder>();
         scoreCards = FindObjectOfType<ScoreCards>(); 
 
@@ -479,7 +483,7 @@ public class GameController : MonoBehaviour
         diceRoller.canRoll = false;
         switch(iconName){
             case "Encounter":
-                StartCoroutine(mapEvents.SpawnEnemy(currentRound));
+                StartCoroutine(eCtrl.SpawnEnemy(currentRound));
             break;
 
             case "Card Booster":
@@ -616,5 +620,5 @@ public class GameController : MonoBehaviour
         cameraMove = StartCoroutine(MoveCamera(newView,offset,stage));
     }
    
-
+*/
 }

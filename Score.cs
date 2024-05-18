@@ -14,11 +14,11 @@ public class Score : MonoBehaviour
     DiceRoller diceRoller;
     AtkCardHolder atkCardHolder;
     CardHolder cardHolder;
-    GameController gameController;
+    GenMapV2 genMapV2;
     ScoreDice scoreDice;
     ScoreCards scoreCards;
 
-    MapEvents mapEvents;
+    EnemyController eCtrl;
 
     //audio source
     public AudioClip[] SFXs;
@@ -32,6 +32,8 @@ public class Score : MonoBehaviour
 
     //if scoring dice currently
     public bool ScoringDice = false;
+
+    public List<int> diceResults = new List<int>();
 
     
 
@@ -65,8 +67,8 @@ public class Score : MonoBehaviour
         diceRoller = FindObjectOfType<DiceRoller>();
         cardHolder = FindObjectOfType<CardHolder>();
         atkCardHolder = FindObjectOfType<AtkCardHolder>();
-        gameController = FindObjectOfType<GameController>();
-        mapEvents = FindObjectOfType<MapEvents>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
+        eCtrl = FindObjectOfType<EnemyController>();
         scoreDice = FindObjectOfType<ScoreDice>();
         scoreCards = FindObjectOfType<ScoreCards>();
     }   
@@ -81,7 +83,7 @@ public class Score : MonoBehaviour
 
             bool allRollsFinished = true;
 
-            foreach(GameObject die in gameController.DiceHeld){
+            foreach(GameObject die in genMapV2.DiceHeld){
                 
                 if (!die.GetComponent<DiceRoll>().accountedFor){
 
@@ -138,7 +140,7 @@ public class Score : MonoBehaviour
     List<GameObject> OrderedList = new List<GameObject>();
     //gets the active cards text elements and edits them accordingly    
     private IEnumerator ScoreFaces(){
-        gameController.diceResults.Clear();
+        diceResults.Clear();
         pitch = 0.9f;
 
         if(!hasRerolled){
@@ -148,7 +150,7 @@ public class Score : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         //orders the dice by which effect they have
-        OrderedList = gameController.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
+        OrderedList = genMapV2.DiceHeld.OrderBy(dice => effectOrder[dice.GetComponent<DiceRoll>().diceTemplate.diceType]).ToList();
 
 
         StartCoroutine(scoreDice.IterateOrderedDice(OrderedList));
@@ -177,7 +179,7 @@ public class Score : MonoBehaviour
 
             yield return new WaitForSeconds(0.5f);
             
-            StartCoroutine(scoreCards.ProcessCards(gameController.diceResults));
+            StartCoroutine(scoreCards.ProcessCards(diceResults));
             hasRerolled = false;
             shouldReroll = false;
         }
@@ -188,7 +190,7 @@ public class Score : MonoBehaviour
 
     //moves dice to respective positions in the dice holder
     public IEnumerator ReturnDice(){
-        foreach(GameObject dice in gameController.DiceHeld){
+        foreach(GameObject dice in genMapV2.DiceHeld){
 
             dice.GetComponent<DiceRoll>().inScoringPhase = false;
             dice.transform.SetParent(dice.GetComponent<DiceRoll>().DiceSlot);
@@ -211,7 +213,7 @@ public class Score : MonoBehaviour
 
     public IEnumerator FinishRoll(){
 
-        StartCoroutine(mapEvents.MiniDamaged(int.Parse(scoreText.text)));
+        eCtrl.DamageEvent(int.Parse(scoreText.text));
 
         score = 0;
         scoreText.text = "";
@@ -228,7 +230,7 @@ public class Score : MonoBehaviour
         scoreDice.diceScorePos.position = scoreDice.diceScorePosStart;
         
         //let player roll again
-        diceRoller.canRoll = gameController.CurrentHealth <= 0 ? false : true;
+        diceRoller.canRoll = genMapV2.CurrentHealth <= 0 ? false : true;
 
     }
 

@@ -13,7 +13,7 @@ public class ScoreCards : MonoBehaviour
     CardHolder cardHolder;
     Score score;
     DiceRoller diceRoller;
-    GameController gameController;
+    GenMapV2 genMapV2;
     
     private List<int> diceFaceValues = new List<int>();
     private Dictionary<CardType, Action<CardController,GameObject>> Processes;
@@ -26,7 +26,7 @@ public class ScoreCards : MonoBehaviour
         cardHolder = FindObjectOfType<CardHolder>();
         score = FindObjectOfType<Score>();
         diceRoller = FindObjectOfType<DiceRoller>();
-        gameController = FindObjectOfType<GameController>();
+        genMapV2 = FindObjectOfType<GenMapV2>();
     }  
 
     public ScoreCards()
@@ -73,7 +73,7 @@ public class ScoreCards : MonoBehaviour
 
         diceFaceValues = diceValues;
 
-        foreach(GameObject card in gameController.CardsHeld){
+        foreach(GameObject card in genMapV2.CardsHeld){
 
             CardController controller = card.GetComponent<CardController>();
             CardType cardType = controller.cardType;
@@ -111,7 +111,7 @@ public class ScoreCards : MonoBehaviour
     }
 
     private void HighRoller(CardController controller, GameObject card){
-        foreach(GameObject dice in gameController.DiceHeld){
+        foreach(GameObject dice in genMapV2.DiceHeld){
 
             int num;
 
@@ -141,7 +141,7 @@ public class ScoreCards : MonoBehaviour
     }
 
     private void RollingRich(CardController controller, GameObject card){
-        foreach(GameObject dice in gameController.DiceHeld){
+        foreach(GameObject dice in genMapV2.DiceHeld){
 
             int num;
 
@@ -175,7 +175,7 @@ public class ScoreCards : MonoBehaviour
 
     public void ScoreAnim(CardType type){
         
-        foreach(GameObject card in gameController.CardsHeld){
+        foreach(GameObject card in genMapV2.CardsHeld){
             if(card.GetComponent<CardController>().cardType == type){
                 StartCoroutine(card.GetComponent<CardController>().ScoreCard());
             }
@@ -199,11 +199,11 @@ public class ScoreCards : MonoBehaviour
 
 
     private void Blessed(CardController controller, GameObject card){
-        gameController.UpdateHealth(1,false);
+        genMapV2.UpdateHealth(1,false);
     }
 
     private void Cursed(CardController controller, GameObject card){
-        gameController.UpdateHealth(1,true);
+        genMapV2.UpdateHealth(1,true);
     }
 
     private void Celestial(CardController controller, GameObject card){
