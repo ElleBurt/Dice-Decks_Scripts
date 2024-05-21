@@ -21,6 +21,13 @@ public class EnemyController : MonoBehaviour
         {EnemyDiff.Hardest, (75f,10,34,"VI")},
     };
 
+    private Dictionary<ElementalType, (int Duration, int Damage, bool Stun)> ElementStats = new Dictionary<ElementalType, (int,int,bool)>{
+        {ElementalType.Poison, (5,2,false)},
+        {ElementalType.Fire, (3,3,false)},
+        {ElementalType.Ice, (1,1,true)},
+        {ElementalType.Spark, (1,3,true)},
+    };
+
     private Dictionary<ElementalType, (int Duration, int Damage, bool Stun)> currentPoisons = new Dictionary<ElementalType, (int,int,bool)>{};
 
     
@@ -29,7 +36,7 @@ public class EnemyController : MonoBehaviour
     private Transform evnSpawn;
     private GenMapV2 genMapV2;
     private DiceRoller diceRoller;
-    private GameObject SelectedEncounter;
+    public GameObject SelectedEncounter;
     public bool SelectedEncounterDied = false;
 
     private void Start(){
@@ -53,8 +60,6 @@ public class EnemyController : MonoBehaviour
         
         List<EnemyTemplate> template = Resources.LoadAll<EnemyTemplate>($"Encounters/Templates/{difficulty}").ToList();
 
-        Debug.Log($"gameProg: {gameProg} \n diff: {difficulty} \n list: {string.Join(", ", template)}");
-
         EnemyTemplate enemySelected = template[Random.Range(0,template.Count)];
 
         enemyTurn = enemySelected.enemyClass == EnemyClass.Flying ? true : false;
@@ -69,7 +74,11 @@ public class EnemyController : MonoBehaviour
         miniScript.AttackPower = diffStats[difficulty].Attack;
         miniScript.MoneyGain = diffStats[difficulty].MoneyGain;
         miniScript.diffTier = diffStats[difficulty].Tier;
+        miniScript.height = enemySelected.height;
 
+        miniScript.SetupMini();
+
+        genMapV2.deployScroll(Resources.Load<Texture2D>($"Scene/MapMats/{enemySelected.origin.ToString()}"),true);
         
         StartCoroutine(DropEvent(enemy,enemy.transform.position));
 
@@ -91,6 +100,10 @@ public class EnemyController : MonoBehaviour
         ProcessEncounter();
     }
 
+    public void PoisonDice(ElementalType type){
+        currentPoisons.Add(type,ElementStats[type]);
+    }
+
     public void DamageEvent(int Damage){
         enemyTurn = true;
         diceRoller.canRoll = false;
@@ -110,7 +123,8 @@ public class EnemyController : MonoBehaviour
     }
 
     private void EnemyKilled(GameObject enemy){
-
+        Destroy(SelectedEncounter,0.5f);
+        genMapV2.retractScroll();
     }
 
     private void ProcessEncounter(){

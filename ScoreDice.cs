@@ -12,6 +12,7 @@ public class ScoreDice : MonoBehaviour
     DiceRoller diceRoller;
     Score scoreScript;
     MapEvents events;
+    EnemyController eCtrl;
     GenMapV2 genMapV2;
 
     private Dictionary<DiceType, Action<string>> Processes;
@@ -42,6 +43,7 @@ public class ScoreDice : MonoBehaviour
         scoreScript = FindObjectOfType<Score>();
         events = FindObjectOfType<MapEvents>();
         genMapV2 = FindObjectOfType<GenMapV2>();
+        eCtrl = FindObjectOfType<EnemyController>();
         diceScorePosStart = diceScorePos.position;
        
     }
@@ -164,7 +166,7 @@ public class ScoreDice : MonoBehaviour
     }
 
     private void ProcessDice(DiceType diceType, GameObject die, string value){
-        SelectedEncounter = events.SelectedEncounter.GetComponent<MiniScript>();
+        SelectedEncounter = eCtrl.SelectedEncounter.GetComponent<MiniScript>();
 
         //gets sound source
         var sfx = diceRoller.GetComponentInParent<AudioSource>();
@@ -279,13 +281,13 @@ public class ScoreDice : MonoBehaviour
         SelectedEncounter.EffectInflicted = value;
         switch(value){
             case "Poison":
-                SelectedEncounter.TickDamage = 3;
+                eCtrl.PoisonDice(ElementalType.Poison);
             break;
             case "Fire":
-                SelectedEncounter.TickDamage = 2;
+                eCtrl.PoisonDice(ElementalType.Fire);
             break;
             case "Freeze":
-                SelectedEncounter.TickDamage = 1;
+                eCtrl.PoisonDice(ElementalType.Ice);
             break;
         }
     }

@@ -56,7 +56,7 @@ public class DiceRoller : MonoBehaviour
         //gives you the starter 2x d6s 
         for(int i = 0; i < 2; i++){
 
-            AddDice(Resources.Load<DiceTemplate>("Dice/Common/D6"));
+            AddDice(Resources.Load<DiceTemplate>("Dice/Common/D4"));
             
         }
     

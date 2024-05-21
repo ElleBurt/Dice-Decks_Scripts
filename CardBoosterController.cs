@@ -45,7 +45,7 @@ public class CardBoosterController : MonoBehaviour
         if(fromMarket){
             genMapV2.MoveCameraTo(GameObject.Find("MarketTableView").transform,false);
         }else{
-            genMapV2.RoundConclusion();
+            genMapV2.retractScroll();
         }
         
         

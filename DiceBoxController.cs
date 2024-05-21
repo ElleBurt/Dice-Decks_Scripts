@@ -22,7 +22,7 @@ public class DiceBoxController : MonoBehaviour
         int spawnIndex = 1;
         foreach(DiceTemplate diceTemplate in genMapV2.RandomDice(3)){
 
-            Transform spawn = transform.Find($"CS{spawnIndex}");
+            Transform spawn = transform.Find($"DS{spawnIndex}");
 
             GameObject Dice = GameObject.Instantiate(diceTemplate.dice,spawn.position ,Quaternion.identity);
             Dice.transform.SetParent(spawn);
@@ -53,7 +53,7 @@ public class DiceBoxController : MonoBehaviour
         if(fromMarket){
             genMapV2.MoveCameraTo(GameObject.Find("MarketTableView").transform,false);
         }else{
-            genMapV2.RoundConclusion();
+            genMapV2.retractScroll();
         }
         
         

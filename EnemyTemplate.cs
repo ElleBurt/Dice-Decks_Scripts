@@ -34,6 +34,5 @@ public class EnemyTemplate : ScriptableObject {
 
     [Header("Mini Details")]
     public GameObject EnemyPrefab;
-    public GameObject ScenePrefab;
-    public Texture2D mapTexture;
+    public SceneEnv origin;
 }

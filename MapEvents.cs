@@ -270,18 +270,9 @@ public class MapEvents : MonoBehaviour {
             StartCoroutine(DropEvent(currentScene, currentScene.transform.position));
             Destroy(currentScene,5f);
         }
-        
 
         yield return new WaitForSeconds(1f);
 
-        Scroll.GetComponent<Animator>().SetBool("IconSelected", true);
-
-        yield return new WaitForSeconds(3f);
-        
-        Destroy(Scroll,1f);
-        
-        
-
-        genMapV2.RoundConclusion();
+        genMapV2.retractScroll();
     }
 }

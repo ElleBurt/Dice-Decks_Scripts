@@ -28,6 +28,16 @@ public enum GameSpeed{
     Rapid = 1,
 }
 
+public enum SceneEnv{
+    Default,
+    GrassLands,
+    WasteLands,
+    CampGrounds,
+    TempleRuins,
+    EldritchVoid,
+    HellScape,
+}
+
 public class GenMapV2 : MonoBehaviour
 {
 
@@ -184,8 +194,7 @@ public class GenMapV2 : MonoBehaviour
         CurrentHealth = 0;
         diceRoller.ActivateDice();
         UpdateHealth(MaxHealth,false);
-        Scroll = GameObject.Instantiate(Resources.Load<GameObject>("Scene/Prefabs/Scroll"), new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
-        Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
+        deployScroll(Resources.Load<Texture2D>("Scene/MapMats/Default"),false);
         GenMapV2Init();
         MoveCameraTo(lastIcon,true);
     }
@@ -251,6 +260,12 @@ public class GenMapV2 : MonoBehaviour
             rowLines.GetComponent<RectTransform>().offsetMin = new Vector2(0,offset);
             rowLines.GetComponent<RectTransform>().offsetMax = new Vector2(0,offset);
 
+            foreach(Transform lineGroup in rowLines.transform){
+                foreach(Transform line in lineGroup){
+                    line.gameObject.GetComponent<Image>().color = new Color(0,0,0,0);
+                }
+            }
+
 
             row.GetComponent<GridLayoutGroup>().constraintCount = iconsThisRow;
 
@@ -294,7 +309,7 @@ public class GenMapV2 : MonoBehaviour
             GameObject icon = Instantiate(Resources.Load<GameObject>("UI/Prefabs/Icon"),row);
 
             icon.GetComponent<Image>().sprite = img;
-            icon.GetComponent<Image>().color = Color.black;
+            icon.GetComponent<Image>().color = new Color(0,0,0,0);
             icon.transform.tag = name == "Start" || name == "Boss" ? name : "MapIcon";
 
             icon.transform.name = img.name;
@@ -422,11 +437,22 @@ public class GenMapV2 : MonoBehaviour
     }
 
     public void RoundConclusion(){
+        Texture2D texture = Resources.Load<Texture2D>("Scene/MapMats/Default");
         currentRow++;
-        Scroll = GameObject.Instantiate(Resources.Load<GameObject>("Scene/Prefab/Scroll"), new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
+        Scroll = GameObject.Instantiate(Resources.Load<GameObject>("Scene/Prefabs/Scroll"), new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
         Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
-        displayIcons(true);
+        Scroll.GetComponent<ScrollController>().PlayAnimation(texture,false);
         MoveCameraTo(lastIcon,true);
+    }
+
+    public void deployScroll(Texture2D texture, bool eventMap){
+        Scroll = GameObject.Instantiate(Resources.Load<GameObject>("Scene/Prefabs/Scroll"), new Vector3(4.9f, 1.3f, 113.2f), Quaternion.identity);
+        Scroll.transform.rotation = Quaternion.Euler(-90f, -90f, 0f);
+        Scroll.GetComponent<ScrollController>().PlayAnimation(texture,eventMap);
+    }
+
+    public void retractScroll(){
+        Scroll.GetComponent<ScrollController>().IconSelected();
     }
 
     public void UpdateHealth(float ChangeFactor, bool Damaged){
@@ -566,7 +592,6 @@ public class GenMapV2 : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         //genMap.clearEnviro();
-        displayIcons(false);
 
         yield return new WaitForSeconds(0.2f);
 
